@@ -1,6 +1,6 @@
 /*
  * A Simple Pong Game written by Leszek Lesner
- * released under the terms of GPL (later maybe BeerLicense) :P
+ *  released under the terms of GPL (later maybe BeerLicense) :P
  */
 
 import java.io.IOException;
