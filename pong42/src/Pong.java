@@ -157,14 +157,14 @@ public class Pong extends GameCanvas implements Runnable, CommandListener {
 		
 		if( animation < 0 ){ 
 			// INPUT
-			//int key = getKeyStates();
-            //if( (key & GameCanvas.UP_PRESSED) != 0 ){ // left up
-			//	player1y -= playerMove;
-			//	if( player1y < 0 ) player1y = 0;
-			//}else if( (key & GameCanvas.DOWN_PRESSED) != 0 ){ // left down
-			//	player1y += playerMove;
-			//	if( player1y > (screenHeight-tacHeight) ) player1y = screenHeight-tacHeight;
-			//}
+			int key = getKeyStates();
+            if( (key & GameCanvas.UP_PRESSED) != 0 ){ // left up
+				player1y -= playerMove;
+				if( player1y < 0 ) player1y = 0;
+			}else if( (key & GameCanvas.DOWN_PRESSED) != 0 ){ // left down
+				player1y += playerMove;
+				if( player1y > (screenHeight-tacHeight) ) player1y = screenHeight-tacHeight;
+			}
 			if( pratice == true ){ // single player
 				if( player2y > ballTop ){
 					player2y -= playerMove;
@@ -276,13 +276,13 @@ public class Pong extends GameCanvas implements Runnable, CommandListener {
 	}
 
     protected void keyPressed(int key) {
-        if (key == KEY_NUM2) {
-            player1y -= playerMove;
-			if( player1y < 0 ) player1y = 0;
-        } else if (key == KEY_NUM8) {
-            player1y += playerMove;
-			if( player1y > (screenHeight-tacHeight) ) player1y = screenHeight-tacHeight;
-        }
+//        if (key == KEY_NUM2) {
+//            player1y -= playerMove;
+//			if( player1y < 0 ) player1y = 0;
+//        } else if (key == KEY_NUM8) {
+//            player1y += playerMove;
+//			if( player1y > (screenHeight-tacHeight) ) player1y = screenHeight-tacHeight;
+//        }
         super.keyPressed(key);
     }
 
