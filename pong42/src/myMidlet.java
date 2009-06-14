@@ -91,6 +91,7 @@ public class myMidlet extends MIDlet implements CommandListener {
 		menu.append("Einzelspiel starten", null);
 		menu.append("Hilfe", null);
 		menu.append("Über", null);
+        menu.append("Beenden", null);
 		menu.setSelectedIndex(lastMenuSelection, true);
 		menu.setCommandListener(this);
 		Display.getDisplay(this).setCurrent(menu);
@@ -157,6 +158,14 @@ public class myMidlet extends MIDlet implements CommandListener {
 			case 1: startPratice();break;
 			case 2: showDialog("Hilfe");break;
 			case 3: showDialog("Über");break;
+            case 4:
+            try {
+                destroyApp(false);
+            } catch (MIDletStateChangeException ex) {
+                ex.printStackTrace();
+            }
+                notifyDestroyed();
+            break;
 			}
 		}
 	}
