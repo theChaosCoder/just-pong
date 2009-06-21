@@ -17,7 +17,7 @@ import javax.microedition.lcdui.Image;
  *
  */
 public class Pong extends GameCanvas implements Runnable, CommandListener {
-	// plumbing
+    // plumbing
 	private myMidlet parent; 
 	private Thread thread = null;
 	private Graphics g = getGraphics();
@@ -267,6 +267,12 @@ public class Pong extends GameCanvas implements Runnable, CommandListener {
 			g.drawString( String.valueOf(score2), screenWidth - (tacWidth + 2), player2y+ tacHeight/2, Graphics.TOP | Graphics.RIGHT );
 		}
 		repaint();
+        //serviceRepaints() sorgt dafür das repaint() auch wirklich direkt
+        //ausgeführt wird, Thread.yield()gibt der Anwedung "Luft zu atmen", das
+        //ist bei älteren Geräten hilfreich um Tastaturschläge besser zu verarbeiten.
+        //Es entstehen keine Performance einbußen.
+        serviceRepaints();
+        Thread.yield();
 		try{
 			Thread.sleep(30);
 			//thread.sleep(20);
