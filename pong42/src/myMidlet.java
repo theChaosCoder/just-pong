@@ -5,6 +5,7 @@
 
 import java.io.IOException;
 
+import javax.bluetooth.BluetoothStateException;
 import javax.microedition.lcdui.Form;
 import javax.microedition.lcdui.StringItem;
 import javax.microedition.lcdui.Canvas;
@@ -19,19 +20,40 @@ import javax.microedition.lcdui.Image;
 import javax.microedition.lcdui.List;
 import javax.microedition.midlet.MIDlet;
 import javax.microedition.midlet.MIDletStateChangeException;
+import net.java.dev.marge.inquiry.DeviceDiscoverer;
+import net.java.dev.marge.inquiry.InquiryListener;
 
 public class myMidlet extends MIDlet implements CommandListener {
 
 	private final Pong game = new Pong(this);
-	private List menu;
+	private List menu,menu2;
 	private StringItem dialogText;
 	private Form dialogForm;
 	private Command dialogExit;
-	private int lastMenuSelection = 0;
+	private int lastMenuSelection = 0, lastMenuSelection2 = 0;
+    //private DevicesList deviceList;
+    Pong gameCanvas;
+    public static myMidlet instance;
 
 	public myMidlet() {
 		super();
 	}
+
+    private void startblueclient() {
+        //TODO: Implement Client
+        System.out.println("Client");
+        try {
+            DeviceDiscoverer.getInstance().startInquiryGIAC((InquiryListener) this);
+        } catch (BluetoothStateException ex) {
+            ex.printStackTrace();
+        }
+        //Display.getDisplay(this).setCurrent(this.deviceList);
+    }
+
+      private void startblueserver() {
+        //TODO: Implement Server
+        System.out.println("Server");
+    }
 
 	/**
 	 *  show splash screen
@@ -83,7 +105,9 @@ public class myMidlet extends MIDlet implements CommandListener {
 	}
 	public void showMenu(){
 		menu = new List("Pong42", Choice.IMPLICIT);
-		if( game.isStarted() ){
+		menu.append("2 Spieler Spiel über Bluetooth Client", null);
+        menu.append("2 Spieler Spiel über Bluetooth Server", null);
+        if( game.isStarted() ){
 			menu.append("Spiel fortsetzen", null);
 		}else{
 			menu.append("2 Spieler Spiel starten", null);
@@ -95,9 +119,12 @@ public class myMidlet extends MIDlet implements CommandListener {
 		menu.setSelectedIndex(lastMenuSelection, true);
 		menu.setCommandListener(this);
 		Display.getDisplay(this).setCurrent(menu);
+
+        this.gameCanvas = new Pong();
+        //this.deviceList = new DevicesList(this, gameCanvas);
 	}
 
-	/**
+    /**
 	 * Starts a new game, or resumes a paused game.
 	 */
 	private void startGame(){
@@ -143,22 +170,23 @@ public class myMidlet extends MIDlet implements CommandListener {
 	}
 
 	protected void destroyApp(boolean arg0) throws MIDletStateChangeException {
-		// TODO Auto-generated method stub
 	}
 
 	/* Deal with any button being pressed on the game menu.
 	 */
 	public void commandAction(Command cmd, Displayable displayable) {
-		if( cmd == dialogExit ){
+        if( cmd == dialogExit ){
 			showMenu();
 		}else{
 			lastMenuSelection = menu.getSelectedIndex();
 			switch(lastMenuSelection) {
-			case 0: startGame();break;
-			case 1: startPratice();break;
-			case 2: showDialog("Hilfe");break;
-			case 3: showDialog("Über");break;
-            case 4:
+            case 0: startblueclient();break;
+            case 1: startblueserver();break;
+            case 2: startGame();break;
+			case 3: startPratice();break;
+			case 4: showDialog("Hilfe");break;
+			case 5: showDialog("Über");break;
+            case 6:
             try {
                 destroyApp(false);
             } catch (MIDletStateChangeException ex) {
@@ -167,6 +195,6 @@ public class myMidlet extends MIDlet implements CommandListener {
                 notifyDestroyed();
             break;
 			}
-		}
+        }           
 	}
 }

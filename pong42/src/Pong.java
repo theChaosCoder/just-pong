@@ -10,7 +10,7 @@ import javax.microedition.lcdui.Displayable;
 import javax.microedition.lcdui.Graphics;
 import javax.microedition.lcdui.game.GameCanvas;
 import java.util.Random;
-import javax.microedition.lcdui.Image;
+//import javax.microedition.lcdui.Image;
 
 /**
  * @author Leszek Lesner
@@ -35,9 +35,9 @@ public class Pong extends GameCanvas implements Runnable, CommandListener {
 	// semaphores
 	private int animation = -1;
 	private int lastGoal;
-	private int tacHeight = screenHeight/5;
-	private int tacWidth = screenWidth/24;
-	private int ballDiameter = Math.max(screenWidth, screenHeight)/20;
+	private int tacHeight = screenHeight/8;
+	private int tacWidth = screenWidth/48;
+	private int ballDiameter = Math.max(screenWidth, screenHeight)/40;
 	private int ballTopSpeed = screenWidth/16; // ball can't cross the screen with less then 16 frames.
 	private int ballMediuSpeed = screenWidth/32;
 	private int ballMinSpeed = screenWidth/50;
@@ -64,6 +64,10 @@ public class Pong extends GameCanvas implements Runnable, CommandListener {
 		pause = new Command("Pause", Command.OK, 2);addCommand(pause);
 		setCommandListener(this);
 	}
+
+    Pong() {
+        super(false);
+    }
 	public void commandAction(Command cmd, Displayable displayable) {
 		if( cmd == pause ){
 			if( cmd.getLabel() == "Pause" )
@@ -227,8 +231,10 @@ public class Pong extends GameCanvas implements Runnable, CommandListener {
 		//g.setColor(0xffeeeeee);
         g.setColor(0x000000);
 		g.fillRect(0,0, screenWidth+1, screenHeight+1); 
-		
-		
+
+        // Draw the middle line
+        g.setColor(0xffeeeeee);
+		g.drawLine((screenWidth/2), 0, (screenWidth/2), screenHeight);
 		// 2. draw players
 		g.setColor(0xffff0000);
 		g.fillRect(0,player1y, tacWidth, tacHeight);
@@ -244,7 +250,6 @@ public class Pong extends GameCanvas implements Runnable, CommandListener {
 			g.fillArc(ballx, bally, ballDiameter, ballDiameter, 0,360);			
 		}
 		// paint score if its in goal animation
-		// TODO: use a custom pixel font method to draw the scores rotated.
 		if( animation > -1 ){
 			if( 0 == animation ){
 				// stop the animation, put the ball back in move
@@ -301,8 +306,7 @@ public class Pong extends GameCanvas implements Runnable, CommandListener {
 			if( ballmy > 0 ) ballmy++;
 			else ballmy--;
 		}
-		// TODO: clean up this garbage.
-		// TODO: see what else i submited in this 3am commit...
+		
 		if( ballmx > 0 && ballmy > 0){
 			if( ballmy > ballmx/2 ){ ballmy = ballmx/2;}
 		}else if( ballmx > 0 && ballmy < 0){ 
