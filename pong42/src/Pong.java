@@ -12,6 +12,7 @@ import javax.microedition.lcdui.game.GameCanvas;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
+import javax.microedition.lcdui.game.Sprite;
 //import javax.microedition.lcdui.Image;
 
 /**
@@ -34,7 +35,7 @@ public class Pong extends GameCanvas implements Runnable, CommandListener {
     private int ballBotom;
     private int ballLeft;
     // options
-    public boolean pratice = false; // single player?
+    public boolean practice = false; // single player?
     // semaphores
     private int animation = -1;
     private int lastGoal;
@@ -49,13 +50,16 @@ public class Pong extends GameCanvas implements Runnable, CommandListener {
     // positions
     public int player1y;
     public int player2y;
-    private int ballx;
-    private int bally;
+    public int ballx;
+    public int bally;
     private int ballmx = 0;
     private int ballmy;
     // scores
     private int score1;
     private int score2;
+
+    public boolean isServer;
+    private Sprite me;
 
     //Items
     Timer itemTimer = new Timer();
@@ -102,7 +106,7 @@ public class Pong extends GameCanvas implements Runnable, CommandListener {
     /**
      * Start a new game. reset all the values and kick off the thread
      */
-    public void start(boolean praticeMode) {
+    public void start(boolean practiceMode) {
         // reset scores
         score1 = 0;
         score2 = 0;
@@ -126,10 +130,10 @@ public class Pong extends GameCanvas implements Runnable, CommandListener {
         }
         // this randomize the Y movement of the ball
         resetY();
-        // set the pratice mode status
-        pratice = praticeMode;
+        // set the practice mode status
+        practice = practiceMode;
         // start();
-        resume(); // since pause() kills the thread, resume() starts it.
+        resume(); // since pause() kills the thread, resume() starts it.    
     }
 
     /**
@@ -145,7 +149,7 @@ public class Pong extends GameCanvas implements Runnable, CommandListener {
      * @return boolean true=game is in progress, false=no game in progress
      */
     public boolean isStarted() {
-        if ((ballmx != 0 || animation > -1) && pratice == false) {
+        if ((ballmx != 0 || animation > -1) && practice == false) {
             return true;
         }
         return false;
@@ -206,7 +210,7 @@ public class Pong extends GameCanvas implements Runnable, CommandListener {
                         player1y = screenHeight - tacHeight;
                     }
                 }
-                if (pratice == true) { // single player
+                if (practice == true) { // single player
                     if (player2y > ballTop) {
                         player2y -= playerMove;
                         String message = "" + player2y;
@@ -337,6 +341,7 @@ public class Pong extends GameCanvas implements Runnable, CommandListener {
             if (isRuning() == false) {
                 return;
             }
+            this.sendPosition();
         }
     }
 
@@ -493,4 +498,19 @@ public class Pong extends GameCanvas implements Runnable, CommandListener {
         //System.out.println("Timer: ");
         }
     };
+     public void sendPosition() {
+        String msg;
+        if (this.isServer) {
+            msg = "p" + (player1y - (getHeight() >> 1))
+                    + "b" + this.ballx + "x" + this.bally;
+        } else {
+            msg = "p" + (player2y - (getHeight() >> 1));
+        }
+        msg += ";";
+        myMidlet.instance.getDevice().send(msg.getBytes());
+
+    }
+     public void setIsServer(boolean isServer) {
+        this.isServer = isServer;
+    }
 }

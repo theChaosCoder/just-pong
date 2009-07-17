@@ -32,6 +32,7 @@ import net.java.dev.marge.factory.CommunicationFactory;
 import net.java.dev.marge.factory.RFCOMMCommunicationFactory;
 import net.java.dev.marge.inquiry.DeviceDiscoverer;
 import net.java.dev.marge.inquiry.InquiryListener;
+import util.ImageUtil;
 
 public class myMidlet extends MIDlet implements CommandListener, CommunicationListener, ConnectionListener {
 
@@ -56,11 +57,11 @@ boolean connected = false;
             //TODO: Implement Client
             System.out.println("Client");
             this.device = AutoConnect.connectToServer("bla", myMidlet.this);
+            this.gameCanvas.setIsServer(false);
             //Display.getDisplay(this).setCurrent(this.deviceList);
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-    //Display.getDisplay(this).setCurrent(this.deviceList);
     }
 
     private void startblueserver() {
@@ -79,7 +80,7 @@ boolean connected = false;
     // welche eine Implemention von ConnectionListener ist.
     //factory.waitClients(sconf, new ConnectionListenerImpl());
         AutoConnect.createServer("bla", myMidlet.this, myMidlet.this);
-
+        this.gameCanvas.setIsServer(true);
         while(!connected) {
             try {
                 Thread.sleep(1000);
@@ -87,12 +88,40 @@ boolean connected = false;
                 ex.printStackTrace();
             }
         }
-         
+        String message = "" + game.player1y ;     // dirty way to convert int to string ;)
+        this.device.send(message.getBytes());     // What message do we have to put there ?
     }
 
     public void receiveMessage(byte[] arg0) {
-        String bla = arg0.toString();
-        game.player1y = Integer.parseInt(bla);
+        //String bla = arg0.toString();
+        //System.out.println(bla);
+        //game.player1y = Integer.parseInt(bla);
+
+        String msg = new String(arg0);
+        int firstIndex = 0;
+        int lastIndex = 0;
+        while ((lastIndex = msg.indexOf(";", firstIndex)) != -1) {
+
+            try {
+
+                String nextToken = msg.substring(firstIndex, lastIndex);
+                if (gameCanvas.isServer) {
+                    gameCanvas.player2y = Integer.parseInt(nextToken.substring(1));
+                } else {
+                    int indexOfBallPosition = nextToken.indexOf("b");   // hier hakt noch was
+                    gameCanvas.player1y = Integer.parseInt(nextToken.substring(1, indexOfBallPosition));
+                    int[] values = ImageUtil.separeValues(nextToken.substring(indexOfBallPosition + 1), "x");
+                    gameCanvas.ballx = values[0];
+                    gameCanvas.bally = values[1];
+                    gameCanvas.repaint();
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            firstIndex = lastIndex + 1;
+        }
+
     }
 
     public void errorOnReceiving(IOException arg0) {
@@ -106,6 +135,9 @@ boolean connected = false;
     public void connectionEstablished(ServerDevice arg0, RemoteDevice arg1) {
         this.device = arg0;
         this.connected = true;
+        //startGame();
+        System.out.println("Connection Established!");
+        Display.getDisplay(this).setCurrent(game);
     }
 
     public void errorOnConnection(IOException arg0) {
@@ -196,16 +228,16 @@ boolean connected = false;
      */
     private void startGame() {
         if (game.isStarted() == false) {
-            game.start(false); // false = not pratice mode
+            game.start(false); // false = not practice mode
         }		//Display.getDisplay(this).setCurrent(game);
     }
 
     /**
-     * starts a new game in pratice mode.
+     * starts a new game in practice mode.
      * kills any running game that was in background
      */
-    private void startPratice() {
-        game.start(true); // true = pratice mode
+    private void startpractice() {
+        game.start(true); // true = practice mode
         Display.getDisplay(this).setCurrent(game);
     }
 
@@ -224,7 +256,7 @@ boolean connected = false;
             dialogText.setLabel("Left player keys: [1]up, [7]down.\n" +
                     "Right player keys: [3]up, [9]down.\n\n" +
                     "Win points by making goals on your oponent side.\nThe better player will rebate ball slower over time while the player with less points will rebate them faster.\n\n" +
-                    "On pratice mode, you control the Left piece, the phone controls the right one.\n\n" +
+                    "On practice mode, you control the Left piece, the phone controls the right one.\n\n" +
                     "KNOWN ISSUES:\nOn sone phones (e.g Nokia6820) the keys may change (e.g. [9]and[#] instead of [3]and[9]).\n\n" +
                     "Some models have a problem that they cannot process more then one key at a time. One players should be polite and release the key when not defending.\n" +
                     "Some models (e.g. 6820) have work-arounds, for example, it doesn't accepet two keys being pressed while closed, but if the flip is open, up to four keys can be pressed at the same time. Try out your model.");
@@ -265,7 +297,7 @@ boolean connected = false;
                             startGame();
                             break;
                         case 3:
-                            startPratice();
+                            startpractice();
                             break;
                         case 4:
                             showDialog("Hilfe");
