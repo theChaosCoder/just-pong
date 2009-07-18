@@ -12,6 +12,9 @@ import javax.microedition.lcdui.Graphics;
 import javax.microedition.lcdui.Image;
 import javax.microedition.lcdui.game.GameCanvas;
 import javax.microedition.lcdui.game.Sprite;
+import javax.microedition.media.Manager;
+import javax.microedition.media.MediaException;
+import javax.microedition.media.Player;
 
 import net.java.dev.marge.communication.CommunicationListener;
 
@@ -29,8 +32,11 @@ public class PongCanvas extends GameCanvas implements
     private Command back;
     private Command pause;
     private Command exit;
+    private Player midiPlayer = null;
+
+
     private int screenWidth = getWidth();
-    private int screenHeight = getHeight() - 1;
+    private int screenHeight = getHeight()-1;
     private int ballTop;
     private int ballRight;
     private int ballBotom;
@@ -65,6 +71,7 @@ public class PongCanvas extends GameCanvas implements
     public int item;
     int itemX;
     int itemY;
+
 
     public PongCanvas() {
         super(false);
@@ -132,7 +139,7 @@ public class PongCanvas extends GameCanvas implements
                 }
             }
             if (animation < 0) {
-                if(isCPU) {
+                if (isCPU) {
                     moveBall();
                 }
                 movePlayer();
@@ -219,7 +226,9 @@ public class PongCanvas extends GameCanvas implements
                 handleServingSpeed(1);
                 //randomizeY();
                 angle(1, player1y);
+                PlaySoundEffect(true, 0);
             } else {
+                PlaySoundEffect(true, 2);
                 score2++;
                 lastGoal = 2;
                 animation = 20; //20 frames to breath until the ball rolls again
@@ -230,7 +239,9 @@ public class PongCanvas extends GameCanvas implements
                 handleServingSpeed(2);
                 //randomizeY();
                 angle(2, player2y);
+                PlaySoundEffect(true, 0);
             } else {
+                PlaySoundEffect(true, 2);
                 score1++;
                 lastGoal = 1;
                 animation = 20;
@@ -241,6 +252,7 @@ public class PongCanvas extends GameCanvas implements
                 (ballTop < 1 && ballmy < 0) || // hit bottom and moving down
                 (ballBotom > screenHeight && ballmy > 0)) {
             ballmy *= -1;
+            PlaySoundEffect(true, 1);
         }
 
 
@@ -295,7 +307,7 @@ public class PongCanvas extends GameCanvas implements
         }
         //Item paint test
         g.setColor(100, 100, 100);
-        g.fillArc(itemX, itemY, ballDiameter + 4, ballDiameter + 4, 0, 360);
+        g.fillArc(itemX, itemY,(int) (ballDiameter * 1.3), (int) (ballDiameter * 1.3), 0, 360);
     }
 
     public void paint(Graphics g) {
@@ -544,5 +556,51 @@ public class PongCanvas extends GameCanvas implements
         //thread.start();
         pause = new Command("Pause", Command.OK, 2);
         addCommand(pause);
+    }
+    public void PlaySoundEffect(boolean p, int song) {
+        // Sound Effects
+        if (p) {
+            if (song == 0) {
+                try {
+                    midiPlayer = Manager.createPlayer(getClass().getResourceAsStream("/beep-7.wav"), "audio/x-wav");
+                    //midiPlayer.realize(); //Vorbereiten
+                    //midiPlayer.prefetch(); //Laden
+                } catch (Exception e) {
+                    System.err.println(e);
+                }
+            }
+            if (song == 1) {
+                try {
+                    midiPlayer = Manager.createPlayer(getClass().getResourceAsStream("/beep-8.wav"), "audio/x-wav");
+                    //midiPlayer.realize(); //Vorbereiten
+                    //midiPlayer.prefetch(); //Laden
+                } catch (Exception e) {
+                    System.err.println(e);
+                }
+            }
+            if (song == 2) {
+                try {
+                    midiPlayer = Manager.createPlayer(getClass().getResourceAsStream("/beep-10.wav"), "audio/x-wav");
+                    //midiPlayer.realize(); //Vorbereiten
+                   // midiPlayer.prefetch(); //Laden
+                } catch (Exception e) {
+                    System.err.println(e);
+                }
+            }
+
+            try {
+                if (midiPlayer != null) {
+                    midiPlayer.start();
+                }
+            } catch (Exception e) {
+                System.err.println(e);
+            }
+        } else {
+            try {
+                midiPlayer.stop();
+            } catch (MediaException ex) {
+                ex.printStackTrace();
+            }
+        }
     }
 }
