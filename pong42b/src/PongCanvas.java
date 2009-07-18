@@ -20,8 +20,8 @@ public class PongCanvas extends GameCanvas implements
 
     private boolean isServer;
     private boolean isCPU = false;
-    private Sprite server,  client,  ball,  background;
-    private int xback,  yback;
+    //private Sprite server,  client,  ball,  background;
+    //private int xback,  yback;
     boolean moveup, movedown;
     private Sprite me;
     private Graphics g = getGraphics();
@@ -94,43 +94,6 @@ public class PongCanvas extends GameCanvas implements
         }
         // this randomize the Y movement of the ball
         resetY();
-
-
-
-    /*
-    moveup = movedown = false;
-
-    this.background = new Sprite(ImageUtil.loadImage("/back.png"));
-    xback = (this.getWidth() >> 1) - (this.background.getWidth() >> 1);
-    yback = (this.getHeight() >> 1) - (this.background.getWidth() >> 1);
-    this.background.setPosition(xback, yback);
-
-    Image table = ImageUtil.loadImage("/table.png");
-    this.server = new Sprite(table);
-    this.server.defineReferencePixel(this.server.getWidth() >> 1,
-    this.server.getHeight() >> 1);
-    this.server.setPosition((this.getWidth() - this.background.getWidth()) >> 1,
-    (this.getHeight() - this.server.getHeight()) >> 1);
-
-    this.client = new Sprite(table);
-    this.client.defineReferencePixel(-this.client.getWidth() >> 1,
-    -this.client.getHeight() >> 1);
-    this.client.setPosition(((this.getWidth() + this.background.getWidth()) >> 1) - this.client.getWidth(),
-    (this.getHeight() - this.server.getHeight()) >> 1);
-
-    ballAngle = 1;//new Random().nextInt() % 4;
-
-    this.ball = new Sprite(ImageUtil.loadImage("/ball.png"));
-    this.ball.defineReferencePixel(-this.ball.getWidth() >> 1, -this.ball.getHeight() >> 1);
-    this.restartBall();
-
-    if (this.isServer) {
-    this.me = server;
-    } else {
-    this.me = client;
-    }
-    me = server;
-     */
     }
 
     protected void keyPressed(int key) {
@@ -162,14 +125,14 @@ public class PongCanvas extends GameCanvas implements
     public void run() {
         while (true) {
 
-            /* if (this.isServer) {
-            this.checkCollision();
-            this.moveBall();
-            this.sendPosition();
-            }*/
+            if (isServer) {
+                if (animation < 0) {
+                    moveBall();
+                    this.sendPosition();
+                }
+            }
             if (animation < 0) {
                 movePlayer();
-                moveBall();
             }
             //drawGraphics();
             repaint();
@@ -189,7 +152,7 @@ public class PongCanvas extends GameCanvas implements
     public void movePlayer() {
         // INPUT
         int key = getKeyStates();
-        System.out.println("bo: " + isServer);
+        //System.out.println("bool: " + isServer);
         if (isCPU || isServer) { // ServerPlayer or 1.Player move
             if ((key & GameCanvas.UP_PRESSED) != 0) { // left up
                 player1y -= playerMove;
@@ -202,7 +165,6 @@ public class PongCanvas extends GameCanvas implements
                 if (player1y > (screenHeight - tacHeight)) {
                     player1y = screenHeight - tacHeight;
                 }
-
             }
         } else if (!isServer && !isCPU) { // ClientPlayer move
             if ((key & GameCanvas.UP_PRESSED) != 0) { // left up
@@ -217,10 +179,9 @@ public class PongCanvas extends GameCanvas implements
                     player2y = screenHeight - tacHeight;
                 }
             }
-
         }
-
-        // MOVE CPU
+        this.sendPosition();
+        // MOVE CPU (only in vs. CPU Mode)
         if (isCPU) {
             if (player2y > ballTop) {
                 player2y -= playerMove;
@@ -279,10 +240,10 @@ public class PongCanvas extends GameCanvas implements
 
 
 
-    //this.ball.setPosition(ball.getX() + x, ball.getY() + y);*/
+
     }
 
-    public void drawGraphics() {
+    public void drawGraphics() { // NOT USED due a bug in K850i, see paint()
         // 1. black background (white maybe eye friendlier)
         //g.setColor(0xffeeeeee);
         g.setColor(0x000000);
@@ -493,44 +454,45 @@ public class PongCanvas extends GameCanvas implements
     };
 
     public void sendPosition() {
-        /* String msg;
+        String msg;
         if (this.isServer) {
-        msg = "p" + (this.server.getY() - (getHeight() >> 1))
-        + "b" + this.ball.getX() + "x" + this.ball.getY();
+            msg = "p" + (player1y) + "b" + ballx + "x" + bally;
         } else {
-        msg = "p" + (this.client.getY() - (getHeight() >> 1));
+            msg = "p" + player2y;
         }
         msg += ";";
         PongMIDlet.instance.getDevice().send(msg.getBytes());
-         */
+
+
     }
 
     public void receiveMessage(byte[] b) {
-        /* String msg = new String(b);
+        String msg = new String(b);
         int firstIndex = 0;
         int lastIndex = 0;
         while ((lastIndex = msg.indexOf(";", firstIndex)) != -1) {
 
-        try {
+            try {
 
-        String nextToken = msg.substring(firstIndex, lastIndex);
+                String nextToken = msg.substring(firstIndex, lastIndex);
 
-        if (this.isServer) {
-        this.client.setPosition(this.client.getX(), (this.getHeight() >> 1) + Integer.parseInt(nextToken.substring(1)));
-        } else {
-        int indexOfBallPosition = nextToken.indexOf("b");
-        this.server.setPosition(this.server.getX(), (this.getHeight() >> 1) + Integer.parseInt(nextToken.substring(1, indexOfBallPosition)));
-        int[] values = ImageUtil.separeValues(nextToken.substring(indexOfBallPosition + 1), "x");
-        this.ball.setPosition(values[0], values[1]);
-        this.repaint();
+                if (this.isServer) {
+                    player1y = Integer.parseInt(nextToken.substring(1));
+                } else {
+                    int indexOfBallPosition = nextToken.indexOf("b");
+                    player1y = Integer.parseInt(nextToken.substring(1, indexOfBallPosition));
+                    int[] values = ImageUtil.separeValues(nextToken.substring(indexOfBallPosition + 1), "x");
+                    ballx = values[0];
+                    bally = values[1];
+                    this.repaint();
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            firstIndex = lastIndex + 1;
         }
 
-        } catch (Exception e) {
-        e.printStackTrace();
-        }
-        firstIndex = lastIndex + 1;
-        }
-         */
     }
 
     public void errorOnReceiving(IOException arg0) {
