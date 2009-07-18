@@ -132,6 +132,9 @@ public class PongCanvas extends GameCanvas implements
                 }
             }
             if (animation < 0) {
+                if(isCPU) {
+                    moveBall();
+                }
                 movePlayer();
             }
             //drawGraphics();
@@ -180,7 +183,9 @@ public class PongCanvas extends GameCanvas implements
                 }
             }
         }
-        this.sendPosition();
+        if (!isCPU) {
+            this.sendPosition();
+        }
         // MOVE CPU (only in vs. CPU Mode)
         if (isCPU) {
             if (player2y > ballTop) {
@@ -477,7 +482,7 @@ public class PongCanvas extends GameCanvas implements
                 String nextToken = msg.substring(firstIndex, lastIndex);
 
                 if (this.isServer) {
-                    player1y = Integer.parseInt(nextToken.substring(1));
+                    player2y = Integer.parseInt(nextToken.substring(1));
                 } else {
                     int indexOfBallPosition = nextToken.indexOf("b");
                     player1y = Integer.parseInt(nextToken.substring(1, indexOfBallPosition));
