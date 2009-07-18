@@ -19,6 +19,7 @@ public class PongCanvas extends GameCanvas implements
         CommunicationListener, Runnable, CommandListener {
 
     private boolean isServer;
+    private boolean isCPU = false;
     private Sprite server,  client,  ball,  background;
     private int xback,  yback;
     boolean moveup, movedown;
@@ -43,7 +44,7 @@ public class PongCanvas extends GameCanvas implements
     private int tacWidth = screenWidth / 48;
     private int ballDiameter = Math.max(screenWidth, screenHeight) / 40;
     private int ballTopSpeed = screenWidth / 16; // ball can't cross the screen with less then 16 frames.
-    private int ballMediuSpeed = screenWidth / 32;
+    private int ballMediumSpeed = screenWidth / 32;
     private int ballMinSpeed = screenWidth / 50;
     // ballTopSpeedY = ballspeedX/2 -- movement can't be too vertical.
     private int playerMove = tacHeight / 4; //player movement is about 1/4 of the dash size. or about 5% of the screen height.
@@ -69,10 +70,6 @@ public class PongCanvas extends GameCanvas implements
         super(false);
     }
 
-    private void restartBall() {
-        this.ball.setPosition(this.getWidth() >> 1, this.getHeight() >> 1);
-    }
-
     private void start() {
         // reset scores
         score1 = 0;
@@ -85,15 +82,15 @@ public class PongCanvas extends GameCanvas implements
         player2y = (screenWidth + tacHeight) / 2;
         animation = -1;
         lastGoal = 0;
-        //Item Timer wird alle 18 sek aufgerufen;
+        //Item Timer wird alle x sek aufgerufen;
         itemTimer.scheduleAtFixedRate(itemTask, 0, 3000);
 
         // randomize to choose which side the ball will move first
         int coin = r.nextInt() % 1;
         if (coin > 0) {
-            ballmx = ballMediuSpeed;
+            ballmx = ballMediumSpeed;
         } else {
-            ballmx = -ballMediuSpeed;
+            ballmx = -ballMediumSpeed;
         }
         // this randomize the Y movement of the ball
         resetY();
@@ -136,34 +133,16 @@ public class PongCanvas extends GameCanvas implements
      */
     }
 
-    public void moveup() {
-        /* if (this.me.collidesWith(this.background, false)) {
-        this.me.setPosition(this.me.getX(), this.me.getY() - TABLE_WALK_SIZE);
-        if (!this.me.collidesWith(this.background, false)) {
-        this.me.setPosition(this.me.getX(), this.me.getY() + TABLE_WALK_SIZE);
-        } else {
-        this.sendPosition();
-        }
-        }*/
-    }
-
-    public void movedown() {
-        /* if (this.me.collidesWith(this.background, false)) {
-        this.me.setPosition(this.me.getX(), this.me.getY() + TABLE_WALK_SIZE);
-        if (!this.me.collidesWith(this.background, false)) {
-        this.me.setPosition(this.me.getX(), this.me.getY() - TABLE_WALK_SIZE);
-        } else {
-        this.sendPosition();
-        }
-        }*/
-    }
-
     protected void keyPressed(int key) {
         super.keyPressed(key);
     }
 
     public void setIsServer(boolean isServer) {
         this.isServer = isServer;
+    }
+
+    public void setIsCPU(boolean cpu) {
+        this.isCPU = cpu;
     }
 
     public void initialize() {
@@ -192,7 +171,7 @@ public class PongCanvas extends GameCanvas implements
                 movePlayer();
                 moveBall();
             }
-            drawGraphics();
+            //drawGraphics();
             repaint();
             //serviceRepaints() sorgt dafür das repaint() auch wirklich direkt
             //ausgeführt wird, Thread.yield()gibt der Anwedung "Luft zu atmen", das
@@ -210,30 +189,46 @@ public class PongCanvas extends GameCanvas implements
     public void movePlayer() {
         // INPUT
         int key = getKeyStates();
-        if ((key & GameCanvas.UP_PRESSED) != 0) { // left up
-            player1y -= playerMove;
+        System.out.println("bo: " + isServer);
+        if (isCPU || isServer) { // ServerPlayer or 1.Player move
+            if ((key & GameCanvas.UP_PRESSED) != 0) { // left up
+                player1y -= playerMove;
 
-            if (player1y < 0) {
-                player1y = 0;
+                if (player1y < 0) {
+                    player1y = 0;
+                }
+            } else if ((key & GameCanvas.DOWN_PRESSED) != 0) { // left down
+                player1y += playerMove;
+                if (player1y > (screenHeight - tacHeight)) {
+                    player1y = screenHeight - tacHeight;
+                }
+
             }
-        } else if ((key & GameCanvas.DOWN_PRESSED) != 0) { // left down
-            player1y += playerMove;
-            if (player1y > (screenHeight - tacHeight)) {
-                player1y = screenHeight - tacHeight;
+        } else if (!isServer && !isCPU) { // ClientPlayer move
+            if ((key & GameCanvas.UP_PRESSED) != 0) { // left up
+                player2y -= playerMove;
+
+                if (player2y < 0) {
+                    player2y = 0;
+                }
+            } else if ((key & GameCanvas.DOWN_PRESSED) != 0) { // left down
+                player2y += playerMove;
+                if (player2y > (screenHeight - tacHeight)) {
+                    player2y = screenHeight - tacHeight;
+                }
             }
+
         }
-        if (practice == true) { // single player
+
+        // MOVE CPU
+        if (isCPU) {
             if (player2y > ballTop) {
                 player2y -= playerMove;
-                String message = "" + player2y;
-                //    myMid.device.send(message.getBytes());
                 if (player2y < 0) {
                     player2y = 0;
                 }
             } else if (player2y + tacHeight < ballBotom) {
                 player2y += playerMove;
-                String message = "" + player2y;
-                //  myMid.device.send(message.getBytes());
                 if (player2y > (screenHeight - tacHeight)) {
                     player2y = screenHeight - tacHeight;
                 }
@@ -242,7 +237,6 @@ public class PongCanvas extends GameCanvas implements
     }
 
     public void moveBall() {
-        // LOGIC
         //1. move ball
         ballx += ballmx;
         bally += ballmy;
@@ -250,9 +244,9 @@ public class PongCanvas extends GameCanvas implements
         ballRight = ballx + ballDiameter;
         ballBotom = bally + ballDiameter;
         ballLeft = ballx;
-        // 2. colision? (Kollision)
-        // 2.a with player (mit dem Paddle)
-        // 2.b with margin (goal) (mit dem Spielrand)
+        // 2. (Kollision)
+        // 2.a (mit dem Paddle)
+        // 2.b (mit dem Spielrand)
         if (ballLeft < tacWidth) { // left of left player
             if (ballBotom > player1y && ballTop < player1y + tacHeight) {
                 // player1 rebates
@@ -284,7 +278,7 @@ public class PongCanvas extends GameCanvas implements
         }
 
 
-    
+
     //this.ball.setPosition(ball.getX() + x, ball.getY() + y);*/
     }
 
@@ -338,15 +332,65 @@ public class PongCanvas extends GameCanvas implements
         g.fillArc(itemX, itemY, ballDiameter + 4, ballDiameter + 4, 0, 360);
     }
 
+    public void paint(Graphics g) {
+        // 1. black background (white maybe eye friendlier)
+        //g.setColor(0xffeeeeee);
+        g.setColor(0x000000);
+        g.fillRect(0, 0, screenWidth + 1, screenHeight + 1);
+
+        // Draw the middle line
+        g.setColor(0xffeeeeee);
+        g.drawLine((screenWidth / 2), 0, (screenWidth / 2), screenHeight);
+        // 2. draw players
+        g.setColor(0xffff0000);
+        g.fillRect(0, player1y, tacWidth, tacHeight);
+        g.setColor(0xff0000ff);
+        g.fillRect(screenWidth - 8, player2y, tacWidth, tacHeight);
+        // 3. draw ball if it's not flashing
+        if (animation < 0) {
+            //g.setColor(0xff000000);
+            g.setColor(0xffeeeeee);
+            g.fillArc(ballx, bally, ballDiameter, ballDiameter, 0, 360);
+        } else if (animation % 2 == 0) { // pinta bola vermelho em frames pares da animacao de gol
+            g.setColor(0xffffcccc);
+            g.fillArc(ballx, bally, ballDiameter, ballDiameter, 0, 360);
+        }
+        // paint score if its in goal animation
+        if (animation > -1) {
+            if (0 == animation) {
+                // stop the animation, put the ball back in move
+                if (1 == lastGoal) {
+                    handleServingSpeed(1);
+                    bally = player1y + tacHeight / 2;
+                    ballx = tacWidth + ballDiameter + 1;
+                    resetY();
+                } else {
+                    handleServingSpeed(2);
+                    bally = player2y + tacHeight / 2;
+                    ballx = ((screenWidth - ballDiameter) - tacWidth) - 1;
+                    resetY();
+                }
+            }
+            animation--;
+            g.setColor(0xffff0000);
+            g.drawString(String.valueOf(score1), tacWidth + 2, player1y + tacHeight / 2, Graphics.TOP | Graphics.LEFT);
+            g.setColor(0xff0000ff);
+            g.drawString(String.valueOf(score2), screenWidth - (tacWidth + 2), player2y + tacHeight / 2, Graphics.TOP | Graphics.RIGHT);
+        }
+        //Item paint test
+        g.setColor(100, 100, 100);
+        g.fillArc(itemX, itemY, ballDiameter + 4, ballDiameter + 4, 0, 360);
+    }
+
     /**
-     * Winkelberechnung für ballmy, je höher, bz. niedriger ballmy,
-     * desto höher der Abprallwinkel.
+     * Winkelberechnung für ballmy, je höher, bzw. niedriger der Wert von ballmy ist,
+     * desto steiler ist der Abprallwinkel.
      */
     private void angle(int player, int playerPos) {
         playerPos = playerPos + 12; // da player1y, bzw. player2y nicht die Mitte ist, warum auch immer :/
         int ballAngle = playerPos - bally;
         double ballMaxAngle = 0.45;
-        System.out.println("ballX: " + ballAngle);
+        //System.out.println("ballX: " + ballAngle);
         //System.out.println("ballY: " + ballmy);
         if (ballAngle > 0) {
             ballmy = (int) (ballAngle * ballMaxAngle) * -1;
@@ -354,10 +398,10 @@ public class PongCanvas extends GameCanvas implements
             ballmy = (int) (ballAngle * ballMaxAngle) * -1;
         }
 
-        System.out.println("schuss: " + ballmy);
+    //System.out.println("schuss: " + ballmy);
     //Der untere code erzeugt immer den selben Winkel, könnte für nen "easy Mode"
     //oder eingesetzt werden, bzw wenn der Gegner zuviele Punke hat. ;-)
-       /* if (ballmx > 0 && ballmy > 0) {
+    /* if (ballmx > 0 && ballmy > 0) {
     if (ballmy > ballmx / 2) {
     ballmy = ballmx / 2;
     }
@@ -392,7 +436,7 @@ public class PongCanvas extends GameCanvas implements
             } else if (score2 - score1 < -4) { // if 5 points above, serve slow
                 ballmx = ballMinSpeed;
             } else {
-                ballmx = ballMediuSpeed;
+                ballmx = ballMediumSpeed;
             }
 
         } else {
@@ -401,7 +445,7 @@ public class PongCanvas extends GameCanvas implements
             } else if (score1 - score2 < -5) {
                 ballmx = -ballMinSpeed;
             } else {
-                ballmx = -ballMediuSpeed;
+                ballmx = -ballMediumSpeed;
             }
 
         }

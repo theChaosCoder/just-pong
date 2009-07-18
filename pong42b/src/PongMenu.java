@@ -76,6 +76,8 @@ public class PongMenu extends List implements CommandListener,
                     }
                     break;
                 case 2: //Gegen CPU spielen
+                    gameCanvas.setIsCPU(false);
+                    gameCanvas.setIsCPU(true);
                     this.gameCanvas.initialize(); // zum test erstmal, man muss server sein damit man das paddle bewegen kann^^
                     break;
                 case 3: //Hilfe
