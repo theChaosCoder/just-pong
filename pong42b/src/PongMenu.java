@@ -40,6 +40,7 @@ public class PongMenu extends List implements CommandListener,
 
         this.append("2 Spieler Client", null);
         this.append("2 Spieler Server", null);
+        this.append("1 Spieler gegen CPU", null);
         this.append("Hilfe", null);
         this.append("About", null);
         this.append("Beenden", null);
@@ -74,14 +75,17 @@ public class PongMenu extends List implements CommandListener,
                         PongMIDlet.instance.setCurrentDisplayable(new DefaultLoadingScreen("pong42", "Starting...", null));
                     }
                     break;
-                case 2: //Hilfe
+                case 2: //Gegen CPU spielen
+                    this.gameCanvas.initialize(); // zum test erstmal, man muss server sein damit man das paddle bewegen kann^^
+                    break;
+                case 3: //Hilfe
                     Alert h = new Alert("Hilfe pong42",
                             "Blabla\n\n" +
                             "Hilfetext\n\n", null, AlertType.CONFIRMATION);
                     h.setTimeout(Alert.FOREVER);
                     PongMIDlet.instance.setCurrentDisplayable(h);
                     break;
-                case 3: //About
+                case 4: //About
                     //PongMIDlet.instance.setCurrentDisplayable(new About(this));
                     Alert a = new Alert("About pong42",
                             "Pong42 programmiert von Anatolij and Leszek\n\n" +
@@ -89,7 +93,7 @@ public class PongMenu extends List implements CommandListener,
                     a.setTimeout(Alert.FOREVER);
                     PongMIDlet.instance.setCurrentDisplayable(a);
                     break;
-                case 4: //Exit
+                case 5: //Exit
                     PongMIDlet.instance.notifyDestroyed();
                     break;
                 default:
