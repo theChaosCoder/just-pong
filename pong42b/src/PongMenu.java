@@ -23,10 +23,9 @@ import net.java.dev.marge.factory.RFCOMMCommunicationFactory;
 import net.java.dev.marge.inquiry.DeviceDiscoverer;
 import net.java.dev.marge.inquiry.InquiryListener;
 
-
 import javax.microedition.media.Manager;
 import javax.microedition.media.Player;
-import javax.microedition.midlet.MIDlet;
+//import javax.microedition.midlet.MIDlet;
 
 public class PongMenu extends List implements CommandListener,
         InquiryListener, ConnectionListener {
@@ -37,7 +36,6 @@ public class PongMenu extends List implements CommandListener,
     private Form dialogForm;
     private StringItem dialogText;
     private Command dialogExit;
-    private boolean p;
     Player midiPlayer = null;
 
     public PongMenu() {
@@ -56,7 +54,7 @@ public class PongMenu extends List implements CommandListener,
         this.setCommandListener(this);
         this.gameCanvas = new PongCanvas();
         this.deviceList = new DevicesList(this, gameCanvas);
-        this.PlayMIDI(true, 0);
+        //this.PlayMIDI(true, 0);
     }
 
     public void PlayMIDI(boolean p, int song) {
@@ -65,6 +63,8 @@ public class PongMenu extends List implements CommandListener,
             if (song == 0) {
                 try {
                     midiPlayer = Manager.createPlayer(getClass().getResourceAsStream("/gradius.mid"), "audio/midi");
+                    midiPlayer.realize(); //Vorbereiten
+                    midiPlayer.prefetch(); //Laden
                 } catch (Exception e) {
                     System.err.println(e);
                 }
@@ -72,6 +72,8 @@ public class PongMenu extends List implements CommandListener,
             if (song == 1) {
                 try {
                     midiPlayer = Manager.createPlayer(getClass().getResourceAsStream("/bubbleb.mid"), "audio/midi");
+                    midiPlayer.realize(); //Vorbereiten
+                    midiPlayer.prefetch(); //Laden
                 } catch (Exception e) {
                     System.err.println(e);
                 }
@@ -127,12 +129,13 @@ public class PongMenu extends List implements CommandListener,
                     this.PlayMIDI(true, 1);
                     gameCanvas.setIsCPU(false);
                     gameCanvas.setIsCPU(true);
-                    this.gameCanvas.initialize(); // zum test erstmal, man muss server sein damit man das paddle bewegen kann^^
+                    this.gameCanvas.initialize();
                     break;
                 case 3: //Hilfe
                     Alert h = new Alert("Hilfe pong42",
-                            "Blabla\n\n" +
-                            "Hilfetext\n\n", null, AlertType.CONFIRMATION);
+                            "Sie sind also zu dumm für dieses Spiel, naja also hier mal die Anleitung:.\n" +
+                            "Steuerung: Oben/Unten Tasten benutzen.\n\n" +
+                            "Bei weiteren Problemen: Support Forum www.ZevenOS.com\n\n", null, AlertType.CONFIRMATION);
                     h.setTimeout(Alert.FOREVER);
                     PongMIDlet.instance.setCurrentDisplayable(h);
                     break;

@@ -42,6 +42,8 @@ public class PongMIDlet extends MIDlet {
 	}
 
 	protected void startApp() throws MIDletStateChangeException {
+        PongMenu menu = new PongMenu();
+        menu.PlayMIDI(true, 0);
         splashCanvas splash = null;
         try {
             splash = new splashCanvas();
@@ -50,13 +52,13 @@ public class PongMIDlet extends MIDlet {
             splash = null;
         }
         long loopStartTime = System.currentTimeMillis();
-        int loopDelay = 2000;
+        int loopDelay = 2200;
         while (true) {
             if (System.currentTimeMillis() - loopStartTime > loopDelay) {
                 break;
             }
         }
-		this.setCurrentDisplayable(new PongMenu());
+		this.setCurrentDisplayable(menu);
 	}
 	
 	public void setCurrentDisplayable(Displayable d) {
