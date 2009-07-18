@@ -74,6 +74,7 @@ public class PongMenu extends List implements CommandListener,
                     midiPlayer = Manager.createPlayer(getClass().getResourceAsStream("/bubbleb.mid"), "audio/midi");
                     midiPlayer.realize(); //Vorbereiten
                     midiPlayer.prefetch(); //Laden
+                    midiPlayer.setLoopCount(-1);
                 } catch (Exception e) {
                     System.err.println(e);
                 }

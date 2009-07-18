@@ -49,8 +49,8 @@ public class PongCanvas extends GameCanvas implements
     private int tacHeight = screenHeight / 8;
     private int tacWidth = screenWidth / 48;
     private int ballDiameter = Math.max(screenWidth, screenHeight) / 40;
-    private int ballTopSpeed = screenWidth / 16; // ball can't cross the screen with less then 16 frames.
-    private int ballMediumSpeed = screenWidth / 32;
+    private int ballTopSpeed = screenWidth / 22; // ball can't cross the screen with less then 16 frames.
+    private int ballMediumSpeed = screenWidth / 36;
     private int ballMinSpeed = screenWidth / 50;
     // ballTopSpeedY = ballspeedX/2 -- movement can't be too vertical.
     private int playerMove = tacHeight / 4; //player movement is about 1/4 of the dash size. or about 5% of the screen height.
@@ -563,8 +563,8 @@ public class PongCanvas extends GameCanvas implements
             if (song == 0) {
                 try {
                     midiPlayer = Manager.createPlayer(getClass().getResourceAsStream("/beep-7.wav"), "audio/x-wav");
-                    //midiPlayer.realize(); //Vorbereiten
-                    //midiPlayer.prefetch(); //Laden
+                    midiPlayer.realize(); //Vorbereiten
+                    midiPlayer.prefetch(); //Laden
                 } catch (Exception e) {
                     System.err.println(e);
                 }
@@ -572,8 +572,8 @@ public class PongCanvas extends GameCanvas implements
             if (song == 1) {
                 try {
                     midiPlayer = Manager.createPlayer(getClass().getResourceAsStream("/beep-8.wav"), "audio/x-wav");
-                    //midiPlayer.realize(); //Vorbereiten
-                    //midiPlayer.prefetch(); //Laden
+                    midiPlayer.realize(); //Vorbereiten
+                    midiPlayer.prefetch(); //Laden
                 } catch (Exception e) {
                     System.err.println(e);
                 }
@@ -581,8 +581,8 @@ public class PongCanvas extends GameCanvas implements
             if (song == 2) {
                 try {
                     midiPlayer = Manager.createPlayer(getClass().getResourceAsStream("/beep-10.wav"), "audio/x-wav");
-                    //midiPlayer.realize(); //Vorbereiten
-                   // midiPlayer.prefetch(); //Laden
+                    midiPlayer.realize(); //Vorbereiten
+                    midiPlayer.prefetch(); //Laden
                 } catch (Exception e) {
                     System.err.println(e);
                 }
