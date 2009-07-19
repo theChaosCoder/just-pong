@@ -152,18 +152,19 @@ public class PongCanvas extends GameCanvas implements
     public void run() {
         while (true) {
             checkSound();
+            checkItem();
+            ItemMagic();
             if (isServer) {
                 if (animation < 0) {
                     moveBall();
-                    checkItem();
-                    ItemMagic();
+                    
                     this.sendPosition();
                 }
             }
             if (animation < 0) {
                 if (isCPU) {
-                    checkItem();
-                    ItemMagic();
+                    //checkItem();
+                    //ItemMagic();
                     moveBall();
                 }
                 movePlayer();
@@ -435,17 +436,7 @@ public class PongCanvas extends GameCanvas implements
         g.fillRect(4, player1y, tacWidth, tacHeight1);
         g.setColor(0xff0000ff);
         // Paddle2 wird größer?
-        if (itemStatus == 2 && itemTyp == 0) {
-            g.fillRect(screenWidth - 8, player2y, tacWidth, (int) (tacHeight2));
-            if (itemDauer > 0) {
-                itemDauer--;
-            } else {
-                itemDauer = 200;
-                itemStatus = 0;
-            }
-        } else {
-            g.fillRect(screenWidth - 8, player2y, tacWidth, tacHeight2);
-        }
+        g.fillRect(screenWidth - 8, player2y, tacWidth, tacHeight2);
 
         // 3. draw ball if it's not flashing
         if (animation < 0) {
@@ -591,11 +582,11 @@ public class PongCanvas extends GameCanvas implements
                             itemPosOK = true;
                             if (isServer) {
                                 sendPosition();
-                        }
+                            }
                         }
                         itemXcenter = itemX + 8;
                         itemYcenter = itemY + 8;
-                        
+
                     }
                 }
             }
@@ -605,7 +596,8 @@ public class PongCanvas extends GameCanvas implements
     public void sendPosition() {
         String msg;
         if (this.isServer) {
-            msg = "p" + (player1y) + "b" + ballx + "x" + bally + "i" + itemX + "j" + itemX + "k" + itemStatus;
+            System.out.println("s" +itemX +""+ itemY);
+            msg = "p" + (player1y) + "b" + ballx + "x" + bally + "i" + itemX + "j" + itemY + "k" + itemStatus;
         } else {
             msg = "p" + player2y;
         }
@@ -624,7 +616,7 @@ public class PongCanvas extends GameCanvas implements
             try {
 
                 String nextToken = msg.substring(firstIndex, lastIndex);
-               // System.out.println(nextToken);
+                // System.out.println(nextToken);
 
                 if (this.isServer) {
                     player2y = Integer.parseInt(nextToken.substring(1));
@@ -634,14 +626,14 @@ public class PongCanvas extends GameCanvas implements
                     int indexOfItemXPosition = nextToken.indexOf("i");
                     int indexOfItemYPosition = nextToken.indexOf("j");
                     int indexOfItemStatusPosition = nextToken.indexOf("k");
-                    
+
                     player1y = Integer.parseInt(nextToken.substring(1, indexOfBallxPosition));
-                    ballx = Integer.parseInt(nextToken.substring(indexOfBallxPosition+1, indexOfBallyPosition));
-                    bally = Integer.parseInt(nextToken.substring(indexOfBallyPosition+1, indexOfItemXPosition));
-                    itemX = Integer.parseInt(nextToken.substring(indexOfItemXPosition+1, indexOfItemYPosition));
-                    itemY = Integer.parseInt(nextToken.substring(indexOfItemYPosition+1, indexOfItemStatusPosition));
-                    itemStatus = Integer.parseInt(nextToken.substring(indexOfItemStatusPosition+1, indexOfItemStatusPosition+2));
-                    System.out.println(itemStatus);
+                    ballx = Integer.parseInt(nextToken.substring(indexOfBallxPosition + 1, indexOfBallyPosition));
+                    bally = Integer.parseInt(nextToken.substring(indexOfBallyPosition + 1, indexOfItemXPosition));
+                    itemX = Integer.parseInt(nextToken.substring(indexOfItemXPosition + 1, indexOfItemYPosition));
+                    itemY = Integer.parseInt(nextToken.substring(indexOfItemYPosition + 1, indexOfItemStatusPosition));
+                    itemStatus = Integer.parseInt(nextToken.substring(indexOfItemStatusPosition + 1, indexOfItemStatusPosition + 2));
+                     System.out.println("s" +itemX +""+ itemY);
                     /*int[] values = separeValues(nextToken.substring(indexOfBallPosition + 1), "x");
                     ballx = values[0];
                     bally = values[1];
@@ -661,8 +653,8 @@ public class PongCanvas extends GameCanvas implements
         }
 
     }
-        //public int indexOf(String str)
-        //Liefert die erste Position, an der str vollständig im String enthalten ist. Ist str nicht im String enthalten, wird -1 geliefert.
+    //public int indexOf(String str)
+    //Liefert die erste Position, an der str vollständig im String enthalten ist. Ist str nicht im String enthalten, wird -1 geliefert.
 
     public static int[] separeValues(String str, String sep) {
         int values[] = new int[2];
