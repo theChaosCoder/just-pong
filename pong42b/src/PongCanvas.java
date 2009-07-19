@@ -52,7 +52,7 @@ public class PongCanvas extends GameCanvas implements
     private int ballMediumSpeed = screenWidth / 36;
     private int ballMinSpeed = screenWidth / 50;
     // ballTopSpeedY = ballspeedX/2 -- movement can't be too vertical.
-    private int playerMove = tacHeight / 4; //player movement is about 1/4 of the dash size. or about 5% of the screen height.
+    private int playerMove = tacHeight / 5; //player movement is about 1/4 of the dash size. or about 5% of the screen height.
     // positions
     public int player1y;
     public int player2y;
@@ -70,6 +70,9 @@ public class PongCanvas extends GameCanvas implements
     public int item;
     int itemX;
     int itemY;
+
+    Image sImage = null;
+
 
     public PongCanvas() {
         super(false);
@@ -99,6 +102,11 @@ public class PongCanvas extends GameCanvas implements
         }
         // this randomize the Y movement of the ball
         resetY();
+
+        try {
+                    sImage = Image.createImage("/starBG.png");
+                } catch (IOException e) {
+                }
     }
 
     protected void keyPressed(int key) {
@@ -321,9 +329,10 @@ public class PongCanvas extends GameCanvas implements
     public void paint(Graphics g) {
         // 1. black background (white maybe eye friendlier)
         //g.setColor(0xffeeeeee);
-        g.setColor(0x000000);
-        g.fillRect(0, 0, screenWidth + 1, screenHeight + 1);
-
+        //g.setColor(0x000000);
+       // g.fillRect(0, 0, screenWidth + 1, screenHeight + 1);
+        g.drawImage(sImage, getWidth() / 2, getHeight() / 2, Graphics.VCENTER | Graphics.HCENTER);
+        
         // Draw the middle line
         g.setColor(0xffeeeeee);
         g.drawLine((screenWidth / 2), 0, (screenWidth / 2), screenHeight);
