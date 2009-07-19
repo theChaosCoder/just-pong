@@ -104,7 +104,7 @@ public class PongCanvas extends GameCanvas implements
         resetY();
 
         try {
-                    sImage = Image.createImage("/starBG.png");
+                    sImage = Image.createImage("/starBG2.png");
                 } catch (IOException e) {
                 }
     }
