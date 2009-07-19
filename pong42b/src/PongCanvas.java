@@ -569,9 +569,7 @@ public class PongCanvas extends GameCanvas implements
 
     private void checkSound() {
         //System.out.println("sound: "+GameCanvas.KEY_STAR);
-        //keyPressed(KEY_STAR);
-        System.out.println("sound: "+ KEY_STAR);
-        if (( GameCanvas) != 0) {
+        if ((this.getKeyStates()) == 4096) { // 4098 = 9 Taste
             
             if (SOUND) {
                 SOUND = false;
