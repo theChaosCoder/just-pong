@@ -8,6 +8,7 @@ import javax.microedition.lcdui.Command;
 import javax.microedition.lcdui.CommandListener;
 import javax.microedition.lcdui.Display;
 import javax.microedition.lcdui.Displayable;
+import javax.microedition.lcdui.Font;
 import javax.microedition.lcdui.Graphics;
 import javax.microedition.lcdui.Image;
 import javax.microedition.lcdui.game.GameCanvas;
@@ -23,10 +24,7 @@ public class PongCanvas extends GameCanvas implements
 
     private boolean isServer;
     private boolean isCPU = false;
-    //private Sprite server,  client,  ball,  background;
-    //private int xback,  yback;
     boolean moveup, movedown;
-    private Sprite me;
     private Graphics g = getGraphics();
     private Random r = new Random();
     private Command back;
@@ -45,14 +43,15 @@ public class PongCanvas extends GameCanvas implements
     // semaphores
     private int animation = -1;
     private int lastGoal;
-    private int tacHeight = screenHeight / 8;
+    private int tacHeight1 = screenHeight / 8;
+    private int tacHeight2 = screenHeight / 8;
     private int tacWidth = screenWidth / 44;
     private int ballDiameter = Math.max(screenWidth, screenHeight) / 40;
     private int ballTopSpeed = screenWidth / 22; // ball can't cross the screen with less then 16 frames.
     private int ballMediumSpeed = screenWidth / 38;
     private int ballMinSpeed = screenWidth / 50;
     // ballTopSpeedY = ballspeedX/2 -- movement can't be too vertical.
-    private int playerMove = tacHeight / 4; //player movement is about 1/4 of the dash size. or about 5% of the screen height.
+    private int playerMove = tacHeight1 / 4; //player movement is about 1/4 of the dash size. or about 5% of the screen height.
     // positions
     public int player1y;
     public int player2y;
@@ -70,10 +69,17 @@ public class PongCanvas extends GameCanvas implements
     public int item;
     int itemX;
     int itemY;
+    int itemXcenter;
+    int itemYcenter;
     Image itemImage = null;
     Image bgImage = null;
-    int bla = 0;
-    int bla2 = 0;
+    int itemAnimation = 0;
+    int itemAniDelay = 0;
+    int itemStatus = 0; // 0 keiner hat Item, 1 Player1 hat Item, 2 = Player2 hat Item eingesammelt.
+    int itemTyp;
+    boolean ballOwner = false; // wer hat zuletzt den Ball berührt. true = Player1, false = Player2.
+    int itemDauer = 200;
+
     public PongCanvas() {
         super(false);
     }
@@ -86,12 +92,13 @@ public class PongCanvas extends GameCanvas implements
         ballx = screenWidth / 2;
         bally = screenHeight / 2;
         // center players
-        player1y = (screenWidth + tacHeight) / 2;
-        player2y = (screenWidth + tacHeight) / 2;
+        player1y = (screenWidth + tacHeight1) / 2;
+        player2y = (screenWidth + tacHeight1) / 2;
         animation = -1;
         lastGoal = 0;
         //Item Timer wird alle x sek aufgerufen;
-        itemTimer.scheduleAtFixedRate(itemTask, 0, 3000);
+        itemTimer.scheduleAtFixedRate(itemTask, 0, 10000);
+
 
         // randomize to choose which side the ball will move first
         int coin = r.nextInt() % 1;
@@ -111,6 +118,9 @@ public class PongCanvas extends GameCanvas implements
             itemImage = Image.createImage("/item.png");
         } catch (IOException e) {
         }
+
+
+
     }
 
     protected void keyPressed(int key) {
@@ -145,11 +155,15 @@ public class PongCanvas extends GameCanvas implements
             if (isServer) {
                 if (animation < 0) {
                     moveBall();
+                    checkItem();
+                    ItemMagic();
                     this.sendPosition();
                 }
             }
             if (animation < 0) {
                 if (isCPU) {
+                    checkItem();
+                    ItemMagic();
                     moveBall();
                 }
                 movePlayer();
@@ -182,8 +196,8 @@ public class PongCanvas extends GameCanvas implements
                 }
             } else if ((key & GameCanvas.DOWN_PRESSED) != 0) { // left down
                 player1y += playerMove;
-                if (player1y > (screenHeight - tacHeight)) {
-                    player1y = screenHeight - tacHeight;
+                if (player1y > (screenHeight - tacHeight1)) {
+                    player1y = screenHeight - tacHeight1;
                 }
             }
         } else if (!isServer && !isCPU) { // ClientPlayer move
@@ -195,8 +209,8 @@ public class PongCanvas extends GameCanvas implements
                 }
             } else if ((key & GameCanvas.DOWN_PRESSED) != 0) { // left down
                 player2y += playerMove;
-                if (player2y > (screenHeight - tacHeight)) {
-                    player2y = screenHeight - tacHeight;
+                if (player2y > (screenHeight - tacHeight2)) {
+                    player2y = screenHeight - tacHeight2;
                 }
             }
         }
@@ -210,10 +224,10 @@ public class PongCanvas extends GameCanvas implements
                 if (player2y < 0) {
                     player2y = 0;
                 }
-            } else if (player2y + tacHeight < ballBotom) {
+            } else if (player2y + tacHeight2 < ballBotom) {
                 player2y += playerMove;
-                if (player2y > (screenHeight - tacHeight)) {
-                    player2y = screenHeight - tacHeight;
+                if (player2y > (screenHeight - tacHeight2)) {
+                    player2y = screenHeight - tacHeight2;
                 }
             }
         }
@@ -231,11 +245,12 @@ public class PongCanvas extends GameCanvas implements
         // 2.a (mit dem Paddle)
         // 2.b (mit dem Spielrand)
         if (ballLeft < tacWidth + 4) { // left of left player
-            if (ballBotom > player1y && ballTop < player1y + tacHeight) {
+            if (ballBotom > player1y && ballTop < player1y + tacHeight1) {
                 // player1 rebates
                 handleServingSpeed(1);
                 //randomizeY();
                 angle(1, player1y);
+                ballOwner = true;
                 if (SOUND) {
                     PlaySoundEffect(true, 0);
                 }
@@ -248,11 +263,12 @@ public class PongCanvas extends GameCanvas implements
                 animation = 20; //20 frames to breath until the ball rolls again
             }
         } else if (ballRight > screenWidth - tacWidth - 4) {
-            if (ballBotom > player2y && ballTop < player2y + tacHeight) {
+            if (ballBotom > player2y && ballTop < player2y + tacHeight2) {
                 // player2 rebates
                 handleServingSpeed(2);
                 //randomizeY();
                 angle(2, player2y);
+                ballOwner = false;
                 if (SOUND) {
                     PlaySoundEffect(true, 0);
                 }
@@ -274,77 +290,163 @@ public class PongCanvas extends GameCanvas implements
                 PlaySoundEffect(true, 1);
             }
         }
-
-
-
-
     }
 
-    public void drawGraphics() { // NOT USED due a bug in K850i, see paint()
-        // 1. black background (white maybe eye friendlier)
-        //g.setColor(0xffeeeeee);
-        g.setColor(0x000000);
-        g.fillRect(0, 0, screenWidth + 1, screenHeight + 1);
+    private void checkItem() {
+        if (itemStatus == 0) {
+            if ((Math.abs(ballx - itemXcenter) < 18) && (Math.abs(bally - itemYcenter)) < 18) {
+                //System.out.println("balxy: "+ballx + " " + bally);
+                //System.out.println("itemxy: "+itemXcenter + " " + itemYcenter);
 
-        // Draw the middle line
-        g.setColor(0xffeeeeee);
-        g.drawLine((screenWidth / 2), 0, (screenWidth / 2), screenHeight);
-        // 2. draw players
-        g.setColor(0xffff0000);
-        g.fillRect(4, player1y, tacWidth, tacHeight);
-        g.setColor(0xff0000ff);
-        g.fillRect(screenWidth - 8, player2y, tacWidth, tacHeight);
-        // 3. draw ball if it's not flashing
-        if (animation < 0) {
-            //g.setColor(0xff000000);
-            g.setColor(0xffeeeeee);
-            g.fillArc(ballx, bally, ballDiameter, ballDiameter, 0, 360);
-        } else if (animation % 2 == 0) { // pinta bola vermelho em frames pares da animacao de gol
-            g.setColor(0xffffcccc);
-            g.fillArc(ballx, bally, ballDiameter, ballDiameter, 0, 360);
-        }
-        // paint score if its in goal animation
-        if (animation > -1) {
-            if (0 == animation) {
-                // stop the animation, put the ball back in move
-                if (1 == lastGoal) {
-                    handleServingSpeed(1);
-                    bally = player1y + tacHeight / 2;
-                    ballx = tacWidth + ballDiameter + 1;
-                    resetY();
+                if (ballOwner) {
+                    itemStatus = 1;
+                    switch (itemTyp) {
+                        case 0:
+                            tacHeight1 = (int) (tacHeight1 * 1.4);
+                            break;
+
+                    }
                 } else {
-                    handleServingSpeed(2);
-                    bally = player2y + tacHeight / 2;
-                    ballx = ((screenWidth - ballDiameter) - tacWidth) - 1;
-                    resetY();
+                    itemStatus = 2;
+                    switch (itemTyp) {
+                        case 0:
+                            tacHeight2 = (int) (tacHeight2 * 1.4);
+                            break;
+                    }
                 }
             }
-            animation--;
-            g.setColor(0xffff0000);
-            g.drawString(String.valueOf(score1), tacWidth + 2, player1y + tacHeight / 2, Graphics.TOP | Graphics.LEFT);
-            g.setColor(0xff0000ff);
-            g.drawString(String.valueOf(score2), screenWidth - (tacWidth + 2), player2y + tacHeight / 2, Graphics.TOP | Graphics.RIGHT);
         }
-        //Item paint test
-        g.setColor(100, 100, 100);
-        g.fillArc(itemX, itemY, (int) (ballDiameter * 1.3), (int) (ballDiameter * 1.3), 0, 360);
     }
 
+    private void ItemMagic() {
+
+        if (itemStatus != 0) {
+
+            if (itemDauer > 0) {
+                itemDauer--;
+            } else {
+                itemDauer = 80;
+                itemStatus = 0;
+                if (ballOwner) {
+                    itemStatus = 1;
+                    switch (itemTyp) {
+                        case 0:
+                            tacHeight1 = screenHeight / 8;
+                            break;
+
+                    }
+                } else {
+                    itemStatus = 2;
+                    switch (itemTyp) {
+                        case 0:
+                            tacHeight2 = screenHeight / 8;
+                            break;
+                    }
+                }
+            }
+        }
+    }
+
+    /*   public void drawGraphics() { // NOT USED due a bug in K850i, see paint()
+    // 1. black background (white maybe eye friendlier)
+    //g.setColor(0xffeeeeee);
+    g.setColor(0x000000);
+    g.fillRect(0, 0, screenWidth + 1, screenHeight + 1);
+
+    // Draw the middle line
+    g.setColor(0xffeeeeee);
+    g.drawLine((screenWidth / 2), 0, (screenWidth / 2), screenHeight);
+    // 2. draw players
+    g.setColor(0xffff0000);
+    // Paddle1 wird größer?
+    if (itemStatus == 1 && itemTyp == 0) {
+    g.fillRect(4, player1y, (int) (tacWidth * 1.4), (int) (tacHeight * 1.4));
+    if (itemDauer > 0) {
+    itemDauer--;
+    } else {
+    itemDauer = 200;
+    itemStatus = 0;
+    }
+    } else {
+    g.fillRect(4, player1y, tacWidth, tacHeight);
+    }
+
+    g.setColor(0xff0000ff);
+    // Paddle2 wird größer?
+    if (itemStatus == 2 && itemTyp == 0) {
+    g.fillRect(screenWidth - 8, player2y, (int) (tacWidth * 1.4), (int) (tacHeight * 1.4));
+    if (itemDauer > 0) {
+    itemDauer--;
+    } else {
+    itemDauer = 200;
+    itemStatus = 0;
+    }
+    } else {
+    g.fillRect(screenWidth - 8, player2y, tacWidth, tacHeight);
+    }
+
+    // 3. draw ball if it's not flashing
+    if (animation < 0) {
+    //g.setColor(0xff000000);
+    g.setColor(0xffeeeeee);
+    g.fillArc(ballx, bally, ballDiameter, ballDiameter, 0, 360);
+    } else if (animation % 2 == 0) { // pinta bola vermelho em frames pares da animacao de gol
+    g.setColor(0xffffcccc);
+    g.fillArc(ballx, bally, ballDiameter, ballDiameter, 0, 360);
+    }
+    // paint score if its in goal animation
+    if (animation > -1) {
+    if (0 == animation) {
+    // stop the animation, put the ball back in move
+    if (1 == lastGoal) {
+    handleServingSpeed(1);
+    bally = player1y + tacHeight / 2;
+    ballx = tacWidth + ballDiameter + 1;
+    resetY();
+    } else {
+    handleServingSpeed(2);
+    bally = player2y + tacHeight / 2;
+    ballx = ((screenWidth - ballDiameter) - tacWidth) - 1;
+    resetY();
+    }
+    }
+    animation--;
+    g.setColor(0xffff0000);
+    g.drawString(String.valueOf(score1), tacWidth + 2, player1y + tacHeight / 2, Graphics.TOP | Graphics.LEFT);
+    g.setColor(0xff0000ff);
+    g.drawString(String.valueOf(score2), screenWidth - (tacWidth + 2), player2y + tacHeight / 2, Graphics.TOP | Graphics.RIGHT);
+    }
+    //Item paint test
+    g.setColor(100, 100, 100);
+    g.fillArc(itemX, itemY, (int) (ballDiameter * 1.3), (int) (ballDiameter * 1.3), 0, 360);
+    }*/
     public void paint(Graphics g) {
         // 1. black background (white maybe eye friendlier)
-        //g.setColor(0xffeeeeee);
-        //g.setColor(0x000000);
+        // g.setColor(0xffeeeeee);
+        // g.setColor(0x000000);
         // g.fillRect(0, 0, screenWidth + 1, screenHeight + 1);
-        g.drawImage(bgImage, (screenHeight/2 ) - ballx / 4, ((screenWidth / 2 +screenWidth/4)) - bally / 4, Graphics.VCENTER | Graphics.HCENTER);
+        g.drawImage(bgImage, (screenHeight / 2) - ballx / 4, ((screenWidth / 2 + screenWidth / 4)) - bally / 4, Graphics.VCENTER | Graphics.HCENTER);
 
         // Draw the middle line
         g.setColor(0xffeeeeee);
         g.drawLine((screenWidth / 2), 0, (screenWidth / 2), screenHeight);
         // 2. draw players
         g.setColor(0xffff0000);
-        g.fillRect(4, player1y, tacWidth, tacHeight);
+        g.fillRect(4, player1y, tacWidth, tacHeight1);
         g.setColor(0xff0000ff);
-        g.fillRect(screenWidth - 8, player2y, tacWidth, tacHeight);
+        // Paddle2 wird größer?
+        if (itemStatus == 2 && itemTyp == 0) {
+            g.fillRect(screenWidth - 8, player2y, tacWidth, (int) (tacHeight2));
+            if (itemDauer > 0) {
+                itemDauer--;
+            } else {
+                itemDauer = 200;
+                itemStatus = 0;
+            }
+        } else {
+            g.fillRect(screenWidth - 8, player2y, tacWidth, tacHeight2);
+        }
+
         // 3. draw ball if it's not flashing
         if (animation < 0) {
             //g.setColor(0xff000000);
@@ -360,38 +462,41 @@ public class PongCanvas extends GameCanvas implements
                 // stop the animation, put the ball back in move
                 if (1 == lastGoal) {
                     handleServingSpeed(1);
-                    bally = player1y + tacHeight / 2;
+                    bally = player1y + tacHeight1 / 2;
                     ballx = tacWidth + ballDiameter + 1;
                     resetY();
                 } else {
                     handleServingSpeed(2);
-                    bally = player2y + tacHeight / 2;
+                    bally = player2y + tacHeight2 / 2;
                     ballx = ((screenWidth - ballDiameter) - tacWidth) - 1;
                     resetY();
                 }
             }
             animation--;
-            g.setColor(0xffff0000);
-            g.drawString(String.valueOf(score1), tacWidth + 2, player1y + tacHeight / 2, Graphics.TOP | Graphics.LEFT);
-            g.setColor(0xff0000ff);
-            g.drawString(String.valueOf(score2), screenWidth - (tacWidth + 2), player2y + tacHeight / 2, Graphics.TOP | Graphics.RIGHT);
+            //g.setColor(0xffff0000);
+            g.setColor(0xffffffff); // weiss sieht man besser :P
+            g.setFont(Font.getFont(Font.FACE_PROPORTIONAL, Font.STYLE_BOLD, Font.SIZE_LARGE));
+            g.drawString(String.valueOf(score1), tacWidth + 8, player1y + tacHeight1 / 2 - 8, Graphics.TOP | Graphics.LEFT);
+            //g.setColor(0xff0000ff);
+            g.drawString(String.valueOf(score2), screenWidth - (tacWidth + 8), player2y + tacHeight2 / 2 - 8, Graphics.TOP | Graphics.RIGHT);
         }
-        //Item paint test
-        //g.setColor(100, 100, 100);
-        //g.fillArc(itemX, itemY, (int) (ballDiameter * 1.4), (int) (ballDiameter * 1.4), 0, 360);
-        if(bla2 < 10 )
-            bla2++;
-        else {
-        if(bla == 48)
-            bla = 0;
-        else bla+= 16;
-        bla2 = 0;
+        if (itemStatus == 0) {
+            //Item paint
+            if (itemAniDelay < 10) {
+                itemAniDelay++;
+            } else {
+                if (itemAnimation == 48) {
+                    itemAnimation = 0;
+                } else {
+                    itemAnimation += 16;
+                }
+                itemAniDelay = 0;
+            }
+
+            g.setClip(itemX, itemY, itemImage.getWidth() / 4, itemImage.getHeight());
+            g.drawImage(itemImage, itemX - itemAnimation, itemY, Graphics.TOP | Graphics.LEFT);
         }
-        g.setClip(itemX, itemY, itemImage.getWidth()/4, itemImage.getHeight());
-
-        g.drawImage(itemImage, itemX-bla, itemY, Graphics.TOP | Graphics.LEFT);
-
-        //g.drawString(String.valueOf(screenHeight), screenWidth / 2, screenHeight / 2, Graphics.TOP | Graphics.RIGHT);
+    //g.drawString(String.valueOf(screenHeight), screenWidth / 2, screenHeight / 2, Graphics.TOP | Graphics.RIGHT);
     }
 
     /**
@@ -435,14 +540,6 @@ public class PongCanvas extends GameCanvas implements
 
     private void handleServingSpeed(int player) {
         if (1 == player) {
-            // simple mode OFF; ballmx *= -1;
-
-            // complex mode OFF;  no point if we gona use only INTs;
-            //ballmx *= (-1 * (score2/(score1+1)));
-            //if( ballmx < ballMinSpeed ) ballmx = ballMinSpeed;
-            //else if( ballmx > ballTopSpeed ) ballmx = ballTopSpeed;
-
-            // medium mode ON :) constants whore
             if (score2 - score1 > 3) { // if 4 points bellow, serve furiously
                 ballmx = ballTopSpeed;
             } else if (score2 - score1 < -4) { // if 5 points above, serve slow
@@ -479,35 +576,36 @@ public class PongCanvas extends GameCanvas implements
     TimerTask itemTask = new TimerTask() {
 
         public void run() {
-            int abstandX = (int) (screenWidth * 0.2); //20% von der ScreenBreite
-            int abstandY = (int) (screenHeight * 0.1); //10% von der ScreenHöhe
-            itemX =
-                    0;
-            itemY =
-                    0;
-            boolean itemPosOK = false;
-            while (!itemPosOK) {
-                itemX = itemRand.nextInt() % screenWidth;
-                itemY =
-                        itemRand.nextInt() % screenHeight;
-                if ((itemX > 0 + abstandX) && (itemX < screenWidth - abstandX) && (itemY > 0 + abstandY) && (itemY < screenHeight - abstandY)) {
-                    itemPosOK = true;
+            if (isServer || isCPU) {
+                if (itemStatus == 0) {
+                    int abstandX = (int) (screenWidth * 0.2); //20% von der ScreenBreite
+                    int abstandY = (int) (screenHeight * 0.1); //10% von der ScreenHöhe
+                    itemX = 0;
+                    itemY = 0;
+                    boolean itemPosOK = false;
+                    itemTyp = 0;//itemRand.nextInt() % 3; // 3 different Items
+                    while (!itemPosOK) {
+                        itemX = itemRand.nextInt() % screenWidth;
+                        itemY = itemRand.nextInt() % screenHeight;
+                        if ((itemX > 0 + abstandX) && (itemX < screenWidth - abstandX) && (itemY > 0 + abstandY) && (itemY < screenHeight - abstandY)) {
+                            itemPosOK = true;
+                            if (isServer) {
+                                sendPosition();
+                        }
+                        }
+                        itemXcenter = itemX + 8;
+                        itemYcenter = itemY + 8;
+                        
+                    }
                 }
-
             }
-        //    Random random = new Random();
-        //   actX = 0;
-        //  while (actX < 42) {
-        //     actX = random.nextInt() % getWidth();
-        //}
-        //System.out.println("Timer: ");
         }
     };
 
     public void sendPosition() {
         String msg;
         if (this.isServer) {
-            msg = "p" + (player1y) + "b" + ballx + "x" + bally;
+            msg = "p" + (player1y) + "b" + ballx + "x" + bally + "i" + itemX + "j" + itemX + "k" + itemStatus;
         } else {
             msg = "p" + player2y;
         }
@@ -526,15 +624,33 @@ public class PongCanvas extends GameCanvas implements
             try {
 
                 String nextToken = msg.substring(firstIndex, lastIndex);
+               // System.out.println(nextToken);
 
                 if (this.isServer) {
                     player2y = Integer.parseInt(nextToken.substring(1));
                 } else {
-                    int indexOfBallPosition = nextToken.indexOf("b");
-                    player1y = Integer.parseInt(nextToken.substring(1, indexOfBallPosition));
-                    int[] values = ImageUtil.separeValues(nextToken.substring(indexOfBallPosition + 1), "x");
+                    int indexOfBallxPosition = nextToken.indexOf("b");
+                    int indexOfBallyPosition = nextToken.indexOf("x");
+                    int indexOfItemXPosition = nextToken.indexOf("i");
+                    int indexOfItemYPosition = nextToken.indexOf("j");
+                    int indexOfItemStatusPosition = nextToken.indexOf("k");
+                    
+                    player1y = Integer.parseInt(nextToken.substring(1, indexOfBallxPosition));
+                    ballx = Integer.parseInt(nextToken.substring(indexOfBallxPosition+1, indexOfBallyPosition));
+                    bally = Integer.parseInt(nextToken.substring(indexOfBallyPosition+1, indexOfItemXPosition));
+                    itemX = Integer.parseInt(nextToken.substring(indexOfItemXPosition+1, indexOfItemYPosition));
+                    itemY = Integer.parseInt(nextToken.substring(indexOfItemYPosition+1, indexOfItemStatusPosition));
+                    itemStatus = Integer.parseInt(nextToken.substring(indexOfItemStatusPosition+1, indexOfItemStatusPosition+2));
+                    System.out.println(itemStatus);
+                    /*int[] values = separeValues(nextToken.substring(indexOfBallPosition + 1), "x");
                     ballx = values[0];
                     bally = values[1];
+                    int indexOfItemPosition = nextToken.indexOf("i");
+                    values = separeValues(nextToken.substring(indexOfItemPosition + 1), "j");
+                    itemXcenter = values[0];
+                    itemYcenter = values[1];
+                    //values = separeValues(nextToken.substring(indexOfItemStatusPosition + 1), "l");
+                    //itemStatus = values[0];*/
                     this.repaint();
                 }
 
@@ -544,6 +660,16 @@ public class PongCanvas extends GameCanvas implements
             firstIndex = lastIndex + 1;
         }
 
+    }
+        //public int indexOf(String str)
+        //Liefert die erste Position, an der str vollständig im String enthalten ist. Ist str nicht im String enthalten, wird -1 geliefert.
+
+    public static int[] separeValues(String str, String sep) {
+        int values[] = new int[2];
+        int separatorIndex = str.indexOf(sep);
+        values[0] = Integer.parseInt(str.substring(0, separatorIndex));
+        values[1] = Integer.parseInt(str.substring(separatorIndex + 1));
+        return values;
     }
 
     public void errorOnReceiving(IOException arg0) {
@@ -595,7 +721,7 @@ public class PongCanvas extends GameCanvas implements
     private void checkSound() {
         //System.out.println("sound: "+ (getKeyStates() & GameCanvas.KEY_STAR));
         if ((this.getKeyStates()) == 4096) { // 4096 = 9 Taste
-         //if ((getKeyStates() & GameCanvas.KEY_STAR) != 0) { // 4096 = 9 Taste
+            //if ((getKeyStates() & GameCanvas.KEY_STAR) != 0) { // 4096 = 9 Taste
 
             if (SOUND) {
                 SOUND = false;

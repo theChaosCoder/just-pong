@@ -17,7 +17,7 @@ import net.java.dev.marge.entity.Device;
 public class PongMIDlet extends MIDlet {
 
 	public static PongMIDlet instance;
-	
+	PongMenu menu;
 	private Display display;
 	
 	private Device device;
@@ -33,6 +33,9 @@ public class PongMIDlet extends MIDlet {
 
 	protected void destroyApp(boolean arg0) throws MIDletStateChangeException {
 		// TODO Auto-generated method stub
+        menu.PlayMIDI(true, 0);
+        menu.PlayMIDI(true, 1);
+        menu = null;
 
 	}
 
@@ -42,7 +45,7 @@ public class PongMIDlet extends MIDlet {
 	}
 
 	protected void startApp() throws MIDletStateChangeException {
-        PongMenu menu = new PongMenu();
+        menu = new PongMenu();
         menu.PlayMIDI(true, 0);
         splashCanvas splash = null;
         try {
