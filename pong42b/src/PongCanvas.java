@@ -70,14 +70,14 @@ public class PongCanvas extends GameCanvas implements
     public int item;
     int itemX;
     int itemY;
-
-    Image sImage = null;
-
-
+    Image itemImage = null;
+    Image bgImage = null;
+    int bla = 0;
+    int bla2 = 0;
     public PongCanvas() {
         super(false);
     }
-    
+
     private void start() {
         // reset scores
         score1 = 0;
@@ -104,9 +104,13 @@ public class PongCanvas extends GameCanvas implements
         resetY();
 
         try {
-                    sImage = Image.createImage("/starBG2.png");
-                } catch (IOException e) {
-                }
+            bgImage = Image.createImage("/starBG.png");
+        } catch (IOException e) {
+        }
+        try {
+            itemImage = Image.createImage("/item.png");
+        } catch (IOException e) {
+        }
     }
 
     protected void keyPressed(int key) {
@@ -226,7 +230,7 @@ public class PongCanvas extends GameCanvas implements
         // 2. (Kollision)
         // 2.a (mit dem Paddle)
         // 2.b (mit dem Spielrand)
-        if (ballLeft < tacWidth+4) { // left of left player
+        if (ballLeft < tacWidth + 4) { // left of left player
             if (ballBotom > player1y && ballTop < player1y + tacHeight) {
                 // player1 rebates
                 handleServingSpeed(1);
@@ -235,7 +239,7 @@ public class PongCanvas extends GameCanvas implements
                 if (SOUND) {
                     PlaySoundEffect(true, 0);
                 }
-            } else if (ballLeft < tacWidth-2) {
+            } else if (ballLeft < tacWidth - 2) {
                 if (SOUND) {
                     PlaySoundEffect(true, 2);
                 }
@@ -243,7 +247,7 @@ public class PongCanvas extends GameCanvas implements
                 lastGoal = 2;
                 animation = 20; //20 frames to breath until the ball rolls again
             }
-        } else if (ballRight > screenWidth - tacWidth-4) {
+        } else if (ballRight > screenWidth - tacWidth - 4) {
             if (ballBotom > player2y && ballTop < player2y + tacHeight) {
                 // player2 rebates
                 handleServingSpeed(2);
@@ -252,7 +256,7 @@ public class PongCanvas extends GameCanvas implements
                 if (SOUND) {
                     PlaySoundEffect(true, 0);
                 }
-            } else if (ballRight > screenWidth - tacWidth+2) {
+            } else if (ballRight > screenWidth - tacWidth + 2) {
                 if (SOUND) {
                     PlaySoundEffect(true, 2);
                 }
@@ -330,9 +334,9 @@ public class PongCanvas extends GameCanvas implements
         // 1. black background (white maybe eye friendlier)
         //g.setColor(0xffeeeeee);
         //g.setColor(0x000000);
-       // g.fillRect(0, 0, screenWidth + 1, screenHeight + 1);
-        g.drawImage(sImage, getWidth() / 2, getHeight() / 2, Graphics.VCENTER | Graphics.HCENTER);
-        
+        // g.fillRect(0, 0, screenWidth + 1, screenHeight + 1);
+        g.drawImage(bgImage, (screenHeight/2 ) - ballx / 4, ((screenWidth / 2 +screenWidth/4)) - bally / 4, Graphics.VCENTER | Graphics.HCENTER);
+
         // Draw the middle line
         g.setColor(0xffeeeeee);
         g.drawLine((screenWidth / 2), 0, (screenWidth / 2), screenHeight);
@@ -373,8 +377,20 @@ public class PongCanvas extends GameCanvas implements
             g.drawString(String.valueOf(score2), screenWidth - (tacWidth + 2), player2y + tacHeight / 2, Graphics.TOP | Graphics.RIGHT);
         }
         //Item paint test
-        g.setColor(100, 100, 100);
-        g.fillArc(itemX, itemY,(int) (ballDiameter * 1.4),(int) (ballDiameter * 1.4), 0, 360);
+        //g.setColor(100, 100, 100);
+        //g.fillArc(itemX, itemY, (int) (ballDiameter * 1.4), (int) (ballDiameter * 1.4), 0, 360);
+        if(bla2 < 10 )
+            bla2++;
+        else {
+        if(bla == 48)
+            bla = 0;
+        else bla+= 16;
+        bla2 = 0;
+        }
+        g.setClip(itemX, itemY, itemImage.getWidth()/4, itemImage.getHeight());
+
+        g.drawImage(itemImage, itemX-bla, itemY, Graphics.TOP | Graphics.LEFT);
+
         //g.drawString(String.valueOf(screenHeight), screenWidth / 2, screenHeight / 2, Graphics.TOP | Graphics.RIGHT);
     }
 
@@ -577,9 +593,10 @@ public class PongCanvas extends GameCanvas implements
     }
 
     private void checkSound() {
-        //System.out.println("sound: "+GameCanvas.KEY_STAR);
-        if ((this.getKeyStates()) == 4096) { // 4098 = 9 Taste
-            
+        //System.out.println("sound: "+ (getKeyStates() & GameCanvas.KEY_STAR));
+        if ((this.getKeyStates()) == 4096) { // 4096 = 9 Taste
+         //if ((getKeyStates() & GameCanvas.KEY_STAR) != 0) { // 4096 = 9 Taste
+
             if (SOUND) {
                 SOUND = false;
             } else {
