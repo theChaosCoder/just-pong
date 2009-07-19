@@ -46,13 +46,13 @@ public class PongCanvas extends GameCanvas implements
     private int animation = -1;
     private int lastGoal;
     private int tacHeight = screenHeight / 8;
-    private int tacWidth = screenWidth / 48;
+    private int tacWidth = screenWidth / 44;
     private int ballDiameter = Math.max(screenWidth, screenHeight) / 40;
     private int ballTopSpeed = screenWidth / 22; // ball can't cross the screen with less then 16 frames.
-    private int ballMediumSpeed = screenWidth / 36;
+    private int ballMediumSpeed = screenWidth / 38;
     private int ballMinSpeed = screenWidth / 50;
     // ballTopSpeedY = ballspeedX/2 -- movement can't be too vertical.
-    private int playerMove = tacHeight / 5; //player movement is about 1/4 of the dash size. or about 5% of the screen height.
+    private int playerMove = tacHeight / 4; //player movement is about 1/4 of the dash size. or about 5% of the screen height.
     // positions
     public int player1y;
     public int player2y;
@@ -226,7 +226,7 @@ public class PongCanvas extends GameCanvas implements
         // 2. (Kollision)
         // 2.a (mit dem Paddle)
         // 2.b (mit dem Spielrand)
-        if (ballLeft < tacWidth) { // left of left player
+        if (ballLeft < tacWidth+4) { // left of left player
             if (ballBotom > player1y && ballTop < player1y + tacHeight) {
                 // player1 rebates
                 handleServingSpeed(1);
@@ -235,7 +235,7 @@ public class PongCanvas extends GameCanvas implements
                 if (SOUND) {
                     PlaySoundEffect(true, 0);
                 }
-            } else {
+            } else if (ballLeft < tacWidth-2) {
                 if (SOUND) {
                     PlaySoundEffect(true, 2);
                 }
@@ -243,7 +243,7 @@ public class PongCanvas extends GameCanvas implements
                 lastGoal = 2;
                 animation = 20; //20 frames to breath until the ball rolls again
             }
-        } else if (ballRight > screenWidth - tacWidth) {
+        } else if (ballRight > screenWidth - tacWidth-4) {
             if (ballBotom > player2y && ballTop < player2y + tacHeight) {
                 // player2 rebates
                 handleServingSpeed(2);
@@ -252,7 +252,7 @@ public class PongCanvas extends GameCanvas implements
                 if (SOUND) {
                     PlaySoundEffect(true, 0);
                 }
-            } else {
+            } else if (ballRight > screenWidth - tacWidth+2) {
                 if (SOUND) {
                     PlaySoundEffect(true, 2);
                 }
@@ -287,7 +287,7 @@ public class PongCanvas extends GameCanvas implements
         g.drawLine((screenWidth / 2), 0, (screenWidth / 2), screenHeight);
         // 2. draw players
         g.setColor(0xffff0000);
-        g.fillRect(0, player1y, tacWidth, tacHeight);
+        g.fillRect(4, player1y, tacWidth, tacHeight);
         g.setColor(0xff0000ff);
         g.fillRect(screenWidth - 8, player2y, tacWidth, tacHeight);
         // 3. draw ball if it's not flashing
@@ -338,7 +338,7 @@ public class PongCanvas extends GameCanvas implements
         g.drawLine((screenWidth / 2), 0, (screenWidth / 2), screenHeight);
         // 2. draw players
         g.setColor(0xffff0000);
-        g.fillRect(0, player1y, tacWidth, tacHeight);
+        g.fillRect(4, player1y, tacWidth, tacHeight);
         g.setColor(0xff0000ff);
         g.fillRect(screenWidth - 8, player2y, tacWidth, tacHeight);
         // 3. draw ball if it's not flashing
