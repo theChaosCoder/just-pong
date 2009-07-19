@@ -78,7 +78,7 @@ public class PongCanvas extends GameCanvas implements
     int itemStatus = 0; // 0 keiner hat Item, 1 Player1 hat Item, 2 = Player2 hat Item eingesammelt.
     int itemTyp;
     boolean ballOwner = false; // wer hat zuletzt den Ball berührt. true = Player1, false = Player2.
-    int itemDauer = 200;
+    int itemDauer = 100;
 
     public PongCanvas() {
         super(false);
@@ -152,23 +152,23 @@ public class PongCanvas extends GameCanvas implements
     public void run() {
         while (true) {
             checkSound();
-            checkItem();
-            ItemMagic();
+            
             if (isServer) {
                 if (animation < 0) {
                     moveBall();
-                    
+                    checkItem();
+                        ItemMagic();
                     this.sendPosition();
                 }
             }
             if (animation < 0) {
                 if (isCPU) {
-                    //checkItem();
-                    //ItemMagic();
+                    checkItem();
+                    ItemMagic();
                     moveBall();
                 }
                 movePlayer();
-                
+
             }
             //drawGraphics();
             repaint();
@@ -305,6 +305,8 @@ public class PongCanvas extends GameCanvas implements
                     switch (itemTyp) {
                         case 0:
                             tacHeight1 = (int) (tacHeight1 * 1.4);
+                            if(isServer)
+                                this.sendPosition();
                             break;
 
                     }
@@ -313,6 +315,8 @@ public class PongCanvas extends GameCanvas implements
                     switch (itemTyp) {
                         case 0:
                             tacHeight2 = (int) (tacHeight2 * 1.4);
+                            if(isServer)
+                                this.sendPosition();
                             break;
                     }
                 }
@@ -327,19 +331,23 @@ public class PongCanvas extends GameCanvas implements
             if (itemDauer > 0) {
                 itemDauer--;
             } else {
-                itemDauer = 80;
+                itemDauer = 100;
                 itemStatus = 0;
-                if (ballOwner) {              
+                if (ballOwner) {
                     switch (itemTyp) {
                         case 0:
                             tacHeight1 = screenHeight / 8;
+                            if(isServer)
+                                this.sendPosition();
                             break;
 
                     }
-                } else {                  
+                } else {
                     switch (itemTyp) {
                         case 0:
                             tacHeight2 = screenHeight / 8;
+                            if(isServer)
+                                this.sendPosition();
                             break;
                     }
                 }
@@ -470,7 +478,7 @@ public class PongCanvas extends GameCanvas implements
             //g.setColor(0xff0000ff);
             g.drawString(String.valueOf(score2), screenWidth - (tacWidth + 8), player2y + tacHeight2 / 2 - 8, Graphics.TOP | Graphics.RIGHT);
         }
-        System.out.println(itemStatus);
+        //System.out.println(itemStatus);
         if (itemStatus == 0) {
             //Item paint
             if (itemAniDelay < 10) {
@@ -595,8 +603,8 @@ public class PongCanvas extends GameCanvas implements
 
     public void sendPosition() {
         String msg;
-        if (this.isServer) {       
-            msg = "p" + (player1y) + "b" + ballx + "x" + bally + "i" + itemX + "j" + itemY + "k" + itemStatus;
+        if (this.isServer) {
+            msg = "p" + (player1y) + "b" + ballx + "x" + bally + "i" + itemX + "j" + itemY + "k" + itemStatus + "t" + tacHeight1 + "q" + tacHeight2;
         } else {
             msg = "p" + player2y;
         }
@@ -615,7 +623,7 @@ public class PongCanvas extends GameCanvas implements
             try {
 
                 String nextToken = msg.substring(firstIndex, lastIndex);
-                // System.out.println(nextToken);
+                 System.out.println(nextToken);
 
                 if (this.isServer) {
                     player2y = Integer.parseInt(nextToken.substring(1));
@@ -625,14 +633,19 @@ public class PongCanvas extends GameCanvas implements
                     int indexOfItemXPosition = nextToken.indexOf("i");
                     int indexOfItemYPosition = nextToken.indexOf("j");
                     int indexOfItemStatusPosition = nextToken.indexOf("k");
+                    int indexOftacHeight1Position = nextToken.indexOf("t");
+                    int indexOftacHeight2Position = nextToken.indexOf("q");
 
                     player1y = Integer.parseInt(nextToken.substring(1, indexOfBallxPosition));
                     ballx = Integer.parseInt(nextToken.substring(indexOfBallxPosition + 1, indexOfBallyPosition));
                     bally = Integer.parseInt(nextToken.substring(indexOfBallyPosition + 1, indexOfItemXPosition));
                     itemX = Integer.parseInt(nextToken.substring(indexOfItemXPosition + 1, indexOfItemYPosition));
                     itemY = Integer.parseInt(nextToken.substring(indexOfItemYPosition + 1, indexOfItemStatusPosition));
-                    itemStatus = Integer.parseInt(nextToken.substring(indexOfItemStatusPosition + 1, indexOfItemStatusPosition + 2));
-                     //System.out.println("s" +itemX +""+ itemY);
+                    itemStatus = Integer.parseInt(nextToken.substring(indexOfItemStatusPosition + 1, indexOftacHeight1Position));
+                    tacHeight1 = Integer.parseInt(nextToken.substring(indexOftacHeight1Position + 1, indexOftacHeight2Position));
+                    tacHeight2 = Integer.parseInt(nextToken.substring(indexOftacHeight2Position + 1, indexOftacHeight2Position + 3));
+
+                    System.out.println("s" +tacHeight1 +" "+ tacHeight2);
                     /*int[] values = separeValues(nextToken.substring(indexOfBallPosition + 1), "x");
                     ballx = values[0];
                     bally = values[1];
