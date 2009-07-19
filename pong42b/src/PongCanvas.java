@@ -168,6 +168,7 @@ public class PongCanvas extends GameCanvas implements
                     moveBall();
                 }
                 movePlayer();
+                
             }
             //drawGraphics();
             repaint();
@@ -328,16 +329,14 @@ public class PongCanvas extends GameCanvas implements
             } else {
                 itemDauer = 80;
                 itemStatus = 0;
-                if (ballOwner) {
-                    itemStatus = 1;
+                if (ballOwner) {              
                     switch (itemTyp) {
                         case 0:
                             tacHeight1 = screenHeight / 8;
                             break;
 
                     }
-                } else {
-                    itemStatus = 2;
+                } else {                  
                     switch (itemTyp) {
                         case 0:
                             tacHeight2 = screenHeight / 8;
@@ -471,6 +470,7 @@ public class PongCanvas extends GameCanvas implements
             //g.setColor(0xff0000ff);
             g.drawString(String.valueOf(score2), screenWidth - (tacWidth + 8), player2y + tacHeight2 / 2 - 8, Graphics.TOP | Graphics.RIGHT);
         }
+        System.out.println(itemStatus);
         if (itemStatus == 0) {
             //Item paint
             if (itemAniDelay < 10) {
@@ -595,8 +595,7 @@ public class PongCanvas extends GameCanvas implements
 
     public void sendPosition() {
         String msg;
-        if (this.isServer) {
-            System.out.println("s" +itemX +""+ itemY);
+        if (this.isServer) {       
             msg = "p" + (player1y) + "b" + ballx + "x" + bally + "i" + itemX + "j" + itemY + "k" + itemStatus;
         } else {
             msg = "p" + player2y;
@@ -633,7 +632,7 @@ public class PongCanvas extends GameCanvas implements
                     itemX = Integer.parseInt(nextToken.substring(indexOfItemXPosition + 1, indexOfItemYPosition));
                     itemY = Integer.parseInt(nextToken.substring(indexOfItemYPosition + 1, indexOfItemStatusPosition));
                     itemStatus = Integer.parseInt(nextToken.substring(indexOfItemStatusPosition + 1, indexOfItemStatusPosition + 2));
-                     System.out.println("s" +itemX +""+ itemY);
+                     //System.out.println("s" +itemX +""+ itemY);
                     /*int[] values = separeValues(nextToken.substring(indexOfBallPosition + 1), "x");
                     ballx = values[0];
                     bally = values[1];
