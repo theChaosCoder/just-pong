@@ -55,7 +55,7 @@ public class PongMIDlet extends MIDlet {
             splash = null;
         }
         long loopStartTime = System.currentTimeMillis();
-        int loopDelay = 2200;
+        int loopDelay = 3500;
         while (true) {
             if (System.currentTimeMillis() - loopStartTime > loopDelay) {
                 break;
@@ -89,16 +89,16 @@ public class PongMIDlet extends MIDlet {
                 g.fillRect(0, 0, getWidth(), getHeight());
 
                 try {
-                    sImage = Image.createImage("/splash.png");
+                    sImage = Image.createImage("/pong_kleiner.jpg");
                 } catch (IOException e) {
                 }
                 if (sImage != null) {
                     g.drawImage(sImage, getWidth() >> 1, getHeight() / 2, Graphics.VCENTER | Graphics.HCENTER);
                 }
 
-                g.setColor(255, 0, 0);
-                g.setFont(Font.getFont(Font.FACE_PROPORTIONAL, Font.STYLE_BOLD, Font.SIZE_LARGE));
-                g.drawString("Pong42", getWidth() - 1, 1, Graphics.RIGHT | Graphics.TOP);
+                //g.setColor(255, 0, 0);
+                //g.setFont(Font.getFont(Font.FACE_PROPORTIONAL, Font.STYLE_BOLD, Font.SIZE_LARGE));
+                //g.drawString("Pong42", getWidth() - 1, 1, Graphics.RIGHT | Graphics.TOP);
                 g.setColor(255, 255, 255);
                 g.setFont(Font.getFont(Font.FACE_PROPORTIONAL, Font.STYLE_PLAIN, Font.SIZE_SMALL));
                 g.drawString("Released under the terms of GPL", 1, getHeight() - 1, Graphics.LEFT | Graphics.BOTTOM);

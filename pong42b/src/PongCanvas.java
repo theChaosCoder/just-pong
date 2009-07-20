@@ -190,26 +190,26 @@ public class PongCanvas extends GameCanvas implements
         int key = getKeyStates();
         //System.out.println("bool: " + isServer);
         if (isCPU || isServer) { // ServerPlayer or 1.Player move
-            if ((key & GameCanvas.UP_PRESSED) != 0) { // left up
+            if ((key & GameCanvas.UP_PRESSED) != 0 || ((key & GameCanvas.KEY_NUM8) != 0)) { // left up
                 player1y -= playerMove;
 
                 if (player1y < 0) {
                     player1y = 0;
                 }
-            } else if ((key & GameCanvas.DOWN_PRESSED) != 0) { // left down
+            } else if ((key & GameCanvas.DOWN_PRESSED) != 0 || ((key & GameCanvas.KEY_NUM2) != 0)) { // left down
                 player1y += playerMove;
                 if (player1y > (screenHeight - tacHeight1)) {
                     player1y = screenHeight - tacHeight1;
                 }
             }
         } else if (!isServer && !isCPU) { // ClientPlayer move
-            if ((key & GameCanvas.UP_PRESSED) != 0) { // left up
+            if ((key & GameCanvas.UP_PRESSED) != 0 || ((key & GameCanvas.KEY_NUM8) != 0)) { // left up
                 player2y -= playerMove;
 
                 if (player2y < 0) {
                     player2y = 0;
                 }
-            } else if ((key & GameCanvas.DOWN_PRESSED) != 0) { // left down
+            } else if ((key & GameCanvas.DOWN_PRESSED) != 0 || ((key & GameCanvas.KEY_NUM2) != 0)) { // left down
                 player2y += playerMove;
                 if (player2y > (screenHeight - tacHeight2)) {
                     player2y = screenHeight - tacHeight2;
@@ -361,78 +361,10 @@ public class PongCanvas extends GameCanvas implements
     g.setColor(0x000000);
     g.fillRect(0, 0, screenWidth + 1, screenHeight + 1);
 
-    // Draw the middle line
-    g.setColor(0xffeeeeee);
-    g.drawLine((screenWidth / 2), 0, (screenWidth / 2), screenHeight);
-    // 2. draw players
-    g.setColor(0xffff0000);
-    // Paddle1 wird größer?
-    if (itemStatus == 1 && itemTyp == 0) {
-    g.fillRect(4, player1y, (int) (tacWidth * 1.4), (int) (tacHeight * 1.4));
-    if (itemDauer > 0) {
-    itemDauer--;
-    } else {
-    itemDauer = 200;
-    itemStatus = 0;
-    }
-    } else {
-    g.fillRect(4, player1y, tacWidth, tacHeight);
-    }
-
-    g.setColor(0xff0000ff);
-    // Paddle2 wird größer?
-    if (itemStatus == 2 && itemTyp == 0) {
-    g.fillRect(screenWidth - 8, player2y, (int) (tacWidth * 1.4), (int) (tacHeight * 1.4));
-    if (itemDauer > 0) {
-    itemDauer--;
-    } else {
-    itemDauer = 200;
-    itemStatus = 0;
-    }
-    } else {
-    g.fillRect(screenWidth - 8, player2y, tacWidth, tacHeight);
-    }
-
-    // 3. draw ball if it's not flashing
-    if (animation < 0) {
-    //g.setColor(0xff000000);
-    g.setColor(0xffeeeeee);
-    g.fillArc(ballx, bally, ballDiameter, ballDiameter, 0, 360);
-    } else if (animation % 2 == 0) { // pinta bola vermelho em frames pares da animacao de gol
-    g.setColor(0xffffcccc);
-    g.fillArc(ballx, bally, ballDiameter, ballDiameter, 0, 360);
-    }
-    // paint score if its in goal animation
-    if (animation > -1) {
-    if (0 == animation) {
-    // stop the animation, put the ball back in move
-    if (1 == lastGoal) {
-    handleServingSpeed(1);
-    bally = player1y + tacHeight / 2;
-    ballx = tacWidth + ballDiameter + 1;
-    resetY();
-    } else {
-    handleServingSpeed(2);
-    bally = player2y + tacHeight / 2;
-    ballx = ((screenWidth - ballDiameter) - tacWidth) - 1;
-    resetY();
-    }
-    }
-    animation--;
-    g.setColor(0xffff0000);
-    g.drawString(String.valueOf(score1), tacWidth + 2, player1y + tacHeight / 2, Graphics.TOP | Graphics.LEFT);
-    g.setColor(0xff0000ff);
-    g.drawString(String.valueOf(score2), screenWidth - (tacWidth + 2), player2y + tacHeight / 2, Graphics.TOP | Graphics.RIGHT);
-    }
-    //Item paint test
-    g.setColor(100, 100, 100);
-    g.fillArc(itemX, itemY, (int) (ballDiameter * 1.3), (int) (ballDiameter * 1.3), 0, 360);
+    ....
     }*/
     public void paint(Graphics g) {
-        // 1. black background (white maybe eye friendlier)
-        // g.setColor(0xffeeeeee);
-        // g.setColor(0x000000);
-        // g.fillRect(0, 0, screenWidth + 1, screenHeight + 1);
+        //Space BG Image
         g.drawImage(bgImage, (screenHeight / 2) - ballx / 4, ((screenWidth / 2 + screenWidth / 4)) - bally / 4, Graphics.VCENTER | Graphics.HCENTER);
 
         // Draw the middle line
@@ -442,7 +374,6 @@ public class PongCanvas extends GameCanvas implements
         g.setColor(0xffff0000);
         g.fillRect(4, player1y, tacWidth, tacHeight1);
         g.setColor(0xff0000ff);
-        // Paddle2 wird größer?
         g.fillRect(screenWidth - 8, player2y, tacWidth, tacHeight2);
 
         // 3. draw ball if it's not flashing
@@ -645,16 +576,8 @@ public class PongCanvas extends GameCanvas implements
                     tacHeight1 = Integer.parseInt(nextToken.substring(indexOftacHeight1Position + 1, indexOftacHeight2Position));
                     tacHeight2 = Integer.parseInt(nextToken.substring(indexOftacHeight2Position + 1, indexOftacHeight2Position + 3));
 
-                    System.out.println("s" +tacHeight1 +" "+ tacHeight2);
-                    /*int[] values = separeValues(nextToken.substring(indexOfBallPosition + 1), "x");
-                    ballx = values[0];
-                    bally = values[1];
-                    int indexOfItemPosition = nextToken.indexOf("i");
-                    values = separeValues(nextToken.substring(indexOfItemPosition + 1), "j");
-                    itemXcenter = values[0];
-                    itemYcenter = values[1];
-                    //values = separeValues(nextToken.substring(indexOfItemStatusPosition + 1), "l");
-                    //itemStatus = values[0];*/
+                    //System.out.println("s" +tacHeight1 +" "+ tacHeight2);
+                   
                     this.repaint();
                 }
 
@@ -668,13 +591,7 @@ public class PongCanvas extends GameCanvas implements
     //public int indexOf(String str)
     //Liefert die erste Position, an der str vollständig im String enthalten ist. Ist str nicht im String enthalten, wird -1 geliefert.
 
-    public static int[] separeValues(String str, String sep) {
-        int values[] = new int[2];
-        int separatorIndex = str.indexOf(sep);
-        values[0] = Integer.parseInt(str.substring(0, separatorIndex));
-        values[1] = Integer.parseInt(str.substring(separatorIndex + 1));
-        return values;
-    }
+    
 
     public void errorOnReceiving(IOException arg0) {
         arg0.printStackTrace();
